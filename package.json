@@ -1,6 +1,6 @@
 {
   "name": "krmx",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "A TypeScript-based multi-client message sharing protocol build on top of WebSockets",
   "scripts": {
     "precommit": "npm run --prefix server precommit && npm run --prefix client precommit && npm run --prefix docs precommit"
