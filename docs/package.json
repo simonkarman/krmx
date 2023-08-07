@@ -8,7 +8,7 @@
   "scripts": {
     "start": "next",
     "build": "next build && next export",
-    "precommit": "echo 'Nothing here yet...'"
+    "precommit": "next lint"
   },
   "dependencies": {
     "next": "^13.4.12",

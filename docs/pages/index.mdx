@@ -37,5 +37,16 @@ export function FAQBox({ title, children }) {
   Krmx is the right solution if you're building a (web) application that is designed for users to interact with each other. The original goal was for Krmx to be used for board games, but it can be used outside of that scope too.
 </FAQBox>
 
+## Terminology
+| name        | description                                                             |
+|-------------|-------------------------------------------------------------------------|
+| krmx        | protocol used to implement websocket logic                              |
+| server      | an application running a krmx server                                    |
+| client      | an application (f.e. React App) that connects to a krmx server          |
+| matchmaking | discovery (and creation) of servers by clients                          |
+| connection  | a websocket connection between a server and a client                    |
+| user        | an client controlled entity on the server that a connection can link to |
+| (un)linking | the act of linking or unlinking a connection to or from a user          |
+
 ## Authors
 - [Simon Karman](https://www.simonkarman.nl)
