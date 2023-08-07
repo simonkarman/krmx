@@ -2,14 +2,14 @@ import React from 'react';
 import { create } from 'react-test-renderer';
 import { KrmxProviderWithStore, useKrmx } from '../src';
 
-const { Krmx } = KrmxProviderWithStore();
+const { KrmxProvider } = KrmxProviderWithStore();
 function MyApp(props: { serverUrl: string }) {
-  return <Krmx
+  return <KrmxProvider
     serverUrl={props.serverUrl}
     onMessage={(message) => console.info(message)}
   >
     <MyComponent/>
-  </Krmx>;
+  </KrmxProvider>;
 }
 
 function MyComponent() {
