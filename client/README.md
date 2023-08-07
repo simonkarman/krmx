@@ -1,8 +1,7 @@
 # @krmx/client
 The client side implementation of krmx (the custom websocket protocol for session based message sharing) in React. Works in combination with [@krmx/server](https://www.npmjs.com/package/@krmx/server).
 
-## Documentation
-You can find the documentation of Krmx [here]().
+You can find the documentation of Krmx [here](https://simonkarman.github.io/krmx).
 
 ## Getting Started
 First install the `@krmx/client` package using npm or yarn.

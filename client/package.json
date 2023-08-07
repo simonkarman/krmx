@@ -1,10 +1,10 @@
 {
   "name": "@krmx/client",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "main": "src/index.tsx",
   "author": "Simon Karman",
   "license": "ISC",
-  "homepage": "github.com/simonkarman/krmx",
+  "homepage": "https://simonkarman.github.io/krmx",
   "description": "krmx client",
   "scripts": {
     "test": "jest --coverage --silent --verbose",

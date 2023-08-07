@@ -1,10 +1,10 @@
 {
   "name": "@krmx/server",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "main": "dist/src/index.js",
   "author": "Simon Karman",
   "license": "ISC",
-  "homepage": "github.com/simonkarman/krmx",
+  "homepage": "https://simonkarman.github.io/krmx",
   "description": "krmx server",
   "scripts": {
     "start": "nodemon --exec \"ts-node src/index.ts\" src/index.ts",

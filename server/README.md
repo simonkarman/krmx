@@ -1,6 +1,8 @@
 # @krmx/server
 The server side implementation of krmx (the custom websocket protocol for session based message sharing). Works in combination with [@krmx/client](https://www.npmjs.com/package/@krmx/client) in React.
 
+You can find the documentation of Krmx [here](https://simonkarman.github.io/krmx).
+
 ## Getting Started
 First install the `@krmx/server` package using npm or yarn.
 ```bash

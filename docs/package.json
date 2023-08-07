@@ -1,9 +1,9 @@
 {
   "name": "@krmx/docs",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "Simon Karman",
   "license": "ISC",
-  "homepage": "github.com/simonkarman/krmx",
+  "homepage": "https://simonkarman.github.io/krmx",
   "description": "krmx documentation",
   "scripts": {
     "start": "next",
