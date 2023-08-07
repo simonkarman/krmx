@@ -1,0 +1,78 @@
+# https://sequencediagram.org/
+title @krmx
+
+actor "Client" as client
+participant "User @ Server\nundefined > user > linked" as server
+participant "Server Logic" as backend
+
+group join
+client-->server: <open>
+server-xclient: server will send rejected on anything else than user/link
+loop connection remains open and unlinked until link is accepted
+client->server: user/link
+space -4
+server->backend: on(authenticate: username, is new user, rejectCallback)
+space -2
+backend->server: reject(reason)
+space -4
+server->client: user/rejected
+end
+client<-server: user/accepted
+group only if new user
+server->backend: on(join: username)
+activate server
+space -3.5
+client<:4-server: user/joined
+end
+server->backend: on(link: username)
+activate server
+space -3.5
+client<:4-server: user/linked
+end
+
+group custom application logic
+client->server: custom/from-connection-message
+space -4
+server->backend: on(message: username from-connection-message)
+backend->server: send(from-server-message)
+space -4
+server->client: custom/from-server-message
+backend->server: broadcast(from-server-message)
+space -4
+server-:4>client: custom/from-server-message
+end
+
+group unlink
+client-->server: <close>
+client->server: on user/unlink (or any invalid format or user/link\nwhen already linked or any from-server message)
+space-4
+backend->server: unlink(username)
+server->backend: on(unlink: username)
+space -4
+server-:4>client: user/unlinked
+deactivate server
+end
+
+space
+activate server
+group leave
+client->server: user/leave
+space -4
+backend->server: leave(username) or leave(username)
+space -2
+server-:4>client: user/unlinked
+space -4
+server->backend: on(unlink: username)
+deactivate server
+server-:4>client: user/left
+space -4
+server->backend: on(leave: username)
+deactivate server
+end
+
+group server side join (unlinked)
+backend->server: join(username)
+activate server
+space -3.5
+client<:4-server: user/joined
+end

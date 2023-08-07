@@ -1,0 +1,25 @@
+{
+  "name": "@krmx/docs",
+  "version": "0.2.0",
+  "author": "Simon Karman",
+  "license": "ISC",
+  "homepage": "github.com/simonkarman/krmx",
+  "description": "krmx documentation",
+  "scripts": {
+    "start": "next",
+    "build": "next build && next export",
+    "precommit": "echo 'Nothing here yet...'"
+  },
+  "dependencies": {
+    "next": "^13.4.12",
+    "nextra": "^2.10.0",
+    "nextra-theme-docs": "^2.10.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.27",
+    "tailwindcss": "^3.3.3"
+  }
+}

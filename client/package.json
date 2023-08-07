@@ -1,0 +1,42 @@
+{
+  "name": "@krmx/client",
+  "version": "0.2.0",
+  "main": "src/index.tsx",
+  "author": "Simon Karman",
+  "license": "ISC",
+  "homepage": "github.com/simonkarman/krmx",
+  "description": "krmx client",
+  "scripts": {
+    "test": "jest --coverage --silent --verbose",
+    "precommit": "npm run lint && npm run test && npm run build",
+    "build": "rm -rf dist && tsc",
+    "lint": "eslint . --ext .tsx --ext .ts",
+    "prepublishOnly": "npm install && npm run precommit"
+  },
+  "dependencies": {
+    "isomorphic-ws": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@reduxjs/toolkit": "1.9.x",
+    "react": "18.x",
+    "react-redux": "8.x"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.22.5",
+    "@babel/preset-react": "^7.22.5",
+    "@types/jest": "^29.5.1",
+    "@types/react-test-renderer": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "babel-jest": "^29.5.0",
+    "eslint": "^7.32.0",
+    "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-jest": "^24.4.2",
+    "eslint-plugin-react": "^7.32.2",
+    "jest": "^29.5.0",
+    "react-test-renderer": "^18.2.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.2",
+    "ws": "^8.13.0"
+  }
+}

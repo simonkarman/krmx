@@ -1,0 +1,41 @@
+# Krmx
+
+**Krmx** is a TypeScript-based multi-client message sharing protocol build on top of WebSockets. It lets you build server and client implementations in TypeScript with ease.
+
+It was initially build to be used as a tool to facility only multiplayer board games via the browser.
+
+## Quick Start
+
+import { Card, Cards } from 'nextra/components';
+
+To start using Krmx, you can follow the demo project:
+
+<Cards num={1}>
+    <Card image arrow title="Demo project" href="https://github.com/binxio/krmx-demo">
+        <>![Documentation theme](/assets/demo.png)</>
+    </Card>
+</Cards>
+
+## Krmx FAQ
+The Krmx FAQ is a collection of useful questions and answers about the project. If you have a question that isn't answered here, please [open an issue](https://github.com/simonkarman/krmx/issues).
+
+export function FAQBox({ title, children }) {
+  return (
+    <details
+      open
+      className="last-of-type:mb-0 rounded-lg bg-neutral-50 dark:bg-neutral-800 p-2 mt-4"
+    >
+      <summary>
+        <strong className="text-lg">{title}</strong>
+      </summary>
+      <div className="nx-p-2">{children}</div>
+    </details>
+  )
+}
+
+<FAQBox title="Why Krmx?">
+  Krmx is the right solution if you're building a (web) application that is designed for users to interact with each other. The original goal was for Krmx to be used for board games, but it can be used outside of that scope too.
+</FAQBox>
+
+## Authors
+- [Simon Karman](https://www.simonkarman.nl)
