@@ -1,0 +1,141 @@
+# Demo
+These steps help you setup a NodeJS TypeScript backend server and a TypeScript React frontend from scratch. If already have these and simply want to add Krmx too them then follow the [simple installation instructions](/getting-started).
+
+## Prerequisites
+To be able to follow this demo you need the following tools installed on your system.
+- npm (recommended version 18.x or higher)
+- a code editor (such as Visual Studio Code or IntelliJ)
+
+## Application Directory
+First create a directory for our application.
+
+```bash copy
+mkdir my-first-krmx-app
+cd my-first-krmx-app
+
+# optional create a git repository for your application
+git init
+```
+
+## Create a Krmx server
+Now, we're going to set up a NodeJS TypeScript server using the [@krmx/server](https://www.npmjs.com/package/@krmx/server) reference implementation.
+
+```bash copy
+mkdir server
+cd server
+npm init -y
+npm install @krmx/server nodemon
+npm install ts-node @types/node typescript
+touch server.ts
+```
+
+Then, in your server/package.json add the following script.
+```json
+...
+"scripts": {
+  "dev": "nodemon --exec \"ts-node server.ts\" server.ts"
+}
+...
+```
+
+Then, add the following code to your `server/server.ts` file.
+```typescript
+import { createServer, Props } from '@krmx/server';
+
+const props: Props = { /* configure here */ }
+const server = createServer(props);
+
+server.on('join', (username) => {
+  console.debug(`[debug] [my-app] ${username} joined!`);
+});
+server.on('message', (username, message) => {
+  console.debug(`[debug] [my-app] ${username} sent ${message.type}`);
+});
+
+server.listen(8082);
+```
+
+Now start your server with `npm run dev`. Everytime you make changes to your `server.ts` file, the server will automatically reload.
+
+If your server is up and running, Krmx clients should be able to connect using `ws://localhost:8082` on your local machine.
+
+> Keep the server process running. To continue with the demo below open a new terminal first.
+
+## Create a Krmx client
+Now, we're going to set up a React client using the [@krmx/client](https://www.npmjs.com/package/@krmx/client) reference implementation.
+
+```bash copy
+cd my-first-krmx-app
+npx create-next-app client --npm --ts --src-dir --eslint
+cd client
+npm install @krmx/client
+```
+
+Then, you can create a simple React client using the following setup in `client/src/app/page.tsx`.
+```js copy
+"use client";
+import { KrmxProviderWithStore, useKrmx } from '@krmx/client';
+import { useState } from 'react';
+
+// Note: Don't use `KrmxProviderWithStore` if you are already creating a redux store in your app.
+//       In that case, add the exported `krmxSlice` to your store and use `KrmxProvider` directly.
+const { KrmxProvider } = KrmxProviderWithStore();
+export default function MyApp() {
+  const [serverUrl] = useState('ws://localhost:8082');
+  return (
+    <KrmxProvider
+      serverUrl={serverUrl}
+      onMessage={(message) => console.info(message)}
+    >
+      <MyComponent/>
+    </KrmxProvider>
+  );
+}
+function MyComponent() {
+  const { isConnected, isLinked, link, rejectionReason, send, leave, users } = useKrmx();
+  if (!isConnected) {
+    // Your logic for when you're not connected to the server goes here
+    return <p>No connection to the server...</p>;
+  }
+  if (!isLinked) {
+    // Your logic for linking your connection with a user goes here
+    return (
+      <div>
+        <button onClick={() => link('simon')}>Join!</button>
+        {rejectionReason && <p>Rejected: {rejectionReason}</p>}
+      </div>
+    );
+  }
+  // Your logic for when you're ready to go goes here
+  return (
+    <div>
+      <p>
+        Welcome <strong>simon</strong>!
+      </p>
+      <button onClick={() => send({ type: 'custom/hello' })}>Send custom/hello</button>
+      <button onClick={leave}>Leave</button>
+      <h2>Users</h2>
+      <ul>
+        {Object.entries(users)
+          .map(([otherUsername, { isLinked }]) => (
+            <li key={otherUsername}>
+              {isLinked ? '🟢' : '🔴'} {otherUsername}
+            </li>)
+          )}
+      </ul>
+    </div>
+  );
+}
+```
+
+Now you can run `npm run dev` in the `client/` directory to start your client. Then, navigate to `http://localhost:3000` to view the result. If your server is still running, you should be able to connect to it.
+
+## Next steps
+After following this demo we recommend you to try the following.
+
+- Try and play around with what you have just created.
+  - How do you make sure that you can fill in your own name when joining?
+  - How to allow a maximum of 4 users on a server?
+- Look at some [reference implementations](/getting-started/references).
+- Learn more about the [Krmx server](/server)
+- Learn more about the [Krmx clients](/clients)

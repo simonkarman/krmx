@@ -1,6 +1,6 @@
 {
   "name": "@krmx/server",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "main": "dist/src/index.js",
   "author": "Simon Karman",
   "license": "ISC",

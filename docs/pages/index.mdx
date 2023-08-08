@@ -1,29 +1,42 @@
-# Krmx
+# Introduction
 
-**Krmx** is a TypeScript-based multi-client message sharing protocol build on top of WebSockets. It lets you build server and client implementations in TypeScript with ease.
+Welcome to the Krmx documentation!
 
-It was initially build to be used as a tool to facility only multiplayer board games via the browser.
+## What is Krmx?
 
-## Quick Start
+**Krmx** is a network protocol for realtime multi-user interactions.
+
+<img className='rounded-lg border my-8 max-w-[80%] mx-auto' src='/krmx/assets/krmx-overview-00.png' />
+
+Let's break that down.
+
+Krmx is a **network protocol**. A network protocol defines a set of rules and conventions for exchanging messages between a client and a server. Krmx uses WebSockets to achieve **realtime** and bidirectional connections.
+
+Krmx is a **multi-user** protocol. An application using Krmx always consists of one or more clients(s) that create connections to a *single server*. Once a client established a connection to the server, it can link its connection to a user. Connections that are linked to users will receive realtime information about all users on the server and can send custom messages to the server.
+
+Krmx lets you build **interactions**. As the application designer you extend the Krmx protocol with custom messages that are sent between server and client over the connections. These custom messages define the interactions your users have with the server (and each-other).
+
+---
 
 import { Card, Cards } from 'nextra/components';
 
-To start using Krmx, you can follow the demo project:
-
-<Cards num={1}>
-    <Card image arrow title="Demo project" href="https://github.com/binxio/krmx-demo">
-        <>![Documentation theme](/assets/demo.png)</>
-    </Card>
+<Cards num={2}>
+  <Card title="Getting Started" href="getting-started" />
+  <Card title="Learn about the Krmx protocol" href="learn" />
+  <Card title="Krmx Server" href="server" />
+  <Card title="Krmx Clients" href="clients" />
 </Cards>
 
+---
+
 ## Krmx FAQ
-The Krmx FAQ is a collection of useful questions and answers about the project. If you have a question that isn't answered here, please [open an issue](https://github.com/simonkarman/krmx/issues).
+The Krmx FAQ is a collection of useful questions and answers. If you have a question that isn't answered here, then please [open an issue](https://github.com/simonkarman/krmx/issues).
 
 export function FAQBox({ title, children }) {
   return (
     <details
       open
-      className="last-of-type:mb-0 rounded-lg bg-neutral-50 dark:bg-neutral-800 p-2 mt-4"
+      className="last-of-type:mb-0 rounded-lg bg-neutral-100 dark:bg-neutral-800 p-2 mt-4"
     >
       <summary>
         <strong className="text-lg">{title}</strong>
@@ -34,19 +47,29 @@ export function FAQBox({ title, children }) {
 }
 
 <FAQBox title="Why Krmx?">
-  Krmx is the right solution if you're building a (web) application that is designed for users to interact with each other. The original goal was for Krmx to be used for board games, but it can be used outside of that scope too.
+  Krmx is the right solution if you're building a (web) application that is designed for users to interact with each other in realtime during a session. A great example of this is multiplayer (board)games, which is the use case around which Krmx was initially designed.
+</FAQBox>
+<FAQBox title="Where can I find examples?">
+  When learning Krmx, it can help to take a look at some example projects. You can find examples in [reference implementations](getting-started/references).
+</FAQBox>
+<FAQBox title="Why are the Krmx reference implementations written in TypeScript?">
+  Krmx provides two reference implementations of its protocol. One for a server and one for a client. As the Krmx protocol is language agnostic, the reference implementations of the Krmx protocol could have been written in any language. So, why TypeScript?
+
+  Almost everyone has access to a browser and since WebSockets are supported by all major web browsers nowadays, it made sense for the reference implementation of the client to be browser-based. The client reference implementation has been written in TypeScript as that is the recommended language for the web. For consistency and type reusability, the server has also been written in TypeScript.
+
+  In theory, nothing is stopping you from using the Krmx protocol in another language. If you decide to build your own Krmx compatible implementation of a server or a client, then feel free to add that as a reference implementation to this repository by [opening a pull request](https://github.com/simonkarman/krmx).
 </FAQBox>
 
 ## Terminology
-| name        | description                                                             |
-|-------------|-------------------------------------------------------------------------|
-| krmx        | protocol used to implement websocket logic                              |
-| server      | an application running a krmx server                                    |
-| client      | an application (f.e. React App) that connects to a krmx server          |
-| matchmaking | discovery (and creation) of servers by clients                          |
-| connection  | a websocket connection between a server and a client                    |
-| user        | an client controlled entity on the server that a connection can link to |
-| (un)linking | the act of linking or unlinking a connection to or from a user          |
+| name        | description                                                                                    |
+|-------------|------------------------------------------------------------------------------------------------|
+| krmx        | the protocol used for realtime multi-user interactions                                         |
+| server      | an application running a krmx server                                                           |
+| client      | an application (f.e. React App) that connects to a krmx server                                 |
+| connection  | a websocket connection between a server and a client                                           |
+| user        | an client controlled entity on the server that a connection can link to                        |
+| (un)linking | the act of linking or unlinking a connection to or from a user                                 |
+| application | the complete system formed by a server and clients to serve interactive functionality to users |
 
 ## Authors
-- [Simon Karman](https://www.simonkarman.nl)
+- [Simon Karman](https://www.simonkarman.nl) - creator of Krmx

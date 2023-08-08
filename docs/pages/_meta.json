@@ -1,14 +1,7 @@
 {
   "index": "Introduction",
-  "-- Server": {
-    "type": "separator",
-    "title": "Server"
-  },
-  "server": "",
-  "-- Clients": {
-    "type": "separator",
-    "title": "Clients"
-  },
-  "react-client": "",
-  "other-clients": ""
+  "getting-started": "Getting Started",
+  "learn": "Learn Krmx",
+  "server": "Server",
+  "clients": "Clients"
 }

@@ -1,0 +1,129 @@
+# Installation
+Krmx provides two reference implementations of its protocol. One for a server and one for a client. Both have been written in TypeScript. The server implementation for a NodeJS backend server and the client implementation for a React frontend.
+
+> Almost everyone has access to a browser. Since, WebSockets are supported by all major web browsers nowadays, it makes sense for the reference implementation of the client to be browser-based. The client reference implementation has been written in TypeScript as that is the recommended language for the web. For consistency and type reusability, the server has also been written in TypeScript.
+
+export function CodeBox({ title, children }) {
+  return (
+    <details
+      className="last-of-type:mb-0 rounded-lg bg-neutral-100 dark:bg-neutral-800 p-2 mt-4"
+    >
+      <summary>
+        <strong className="text-lg">{title}</strong>
+      </summary>
+      <div className="px-4">{children}</div>
+    </details>
+  )
+}
+
+## NodeJS Installation
+These steps help you to add Krmx to an already existing NodeJS TypeScript backend server and a TypeScript React frontend. If start from scratch you can follow the [demo from scratch](getting-started/demo).
+
+### Server
+In your NodeJS server, install the `@krmx/server` package using npm or yarn.
+```bash
+npm install @krmx/server
+
+# or use yarn
+yarn add @krmx/server
+```
+
+Then, you can create a simple server using the following setup. The api level documentation can be found on the type definitions.
+<CodeBox title='Example Server Code'>
+  ```ts copy
+  import { createServer, Props } from '@krmx/server';
+
+  const props: Props = { /* configure here */ }
+  const server = createServer(props);
+
+  server.on('authenticate', (username, isNewUser, reject) => {
+    if (isNewUser && server.getUsers().length > 4) {
+      reject('server is full');
+    }
+  });
+
+  server.on('message', (username, message) => {
+    console.debug(`[debug] [krmx] ${username} sent ${message.type}`);
+  });
+
+  server.listen(8082);
+  ```
+</CodeBox>
+
+If you start your server, the Krmx server will start and clients will be able to connect using `ws://localhost:8082` on your local machine.
+
+[More information about the Krmx server](/server).
+
+### Client
+In your React project, install the `@krmx/client` package using npm or yarn.
+```bash
+npm install @krmx/client
+
+# or use yarn
+yarn add @krmx/client
+```
+
+Then, you can create a simple React component that serves as a client using the following setup.
+
+<CodeBox title='Example Client Code'>
+  ```js copy
+  import { KrmxProviderWithStore, useKrmx } from '@krmx/client';
+  import { useState } from 'react';
+
+  // Note: Don't use `KrmxProviderWithStore` if you are already creating a redux store in your app.
+  //       In that case, add the exported `krmxSlice` to your store and use `KrmxProvider` directly.
+  const { KrmxProvider } = KrmxProviderWithStore();
+  export default function MyApplication() {
+    const [serverUrl] = useState('ws://localhost:8082');
+    return (
+      <KrmxProvider
+        serverUrl={serverUrl}
+        onMessage={(message) => console.info(message)}
+      >
+        <MyComponent/>
+      </KrmxProvider>
+    );
+  }
+  function MyComponent() {
+    const { isConnected, isLinked, link, rejectionReason, send, leave, users } = useKrmx();
+    if (!isConnected) {
+      // Your logic for when you're not connected to the server goes here
+      return <p>No connection to the server...</p>;
+    }
+    if (!isLinked) {
+      // Your logic for linking your connection with a user goes here
+      return (
+        <div>
+          <button onClick={() => link('simon')}>Join!</button>
+          {rejectionReason && <p>Rejected: {rejectionReason}</p>}
+        </div>
+      );
+    }
+    // Your logic for when you're ready to go goes here
+    return (
+      <div>
+        <p>
+          Welcome <strong>simon</strong>!
+        </p>
+        <button onClick={() => send({ type: 'custom/hello' })}>Send custom/hello</button>
+        <button onClick={leave}>Leave</button>
+        <h2>Users</h2>
+        <ul>
+          {Object.entries(users)
+            .map(([otherUsername, { isLinked }]) => (
+              <li key={otherUsername}>
+                {isLinked ? '🟢' : '🔴'} {otherUsername}
+              </li>)
+            )}
+        </ul>
+      </div>
+    );
+  }
+  ```
+</CodeBox>
+
+[More information about the Krmx React client](/clients/react-client).
+
+## Other languages
+In theory, nothing is stopping you from using the Krmx protocol in another language. If you decide to build your own Krmx compatible implementation of a server or a client, then feel free to add that as a reference implementation to this repository by [opening a pull request](https://github.com/simonkarman/krmx).
+

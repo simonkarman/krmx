@@ -1,8 +1,9 @@
 {
   "name": "krmx",
   "version": "0.2.2",
-  "description": "A TypeScript-based multi-client message sharing protocol build on top of WebSockets",
+  "description": "Krmx is a network protocol for realtime multi-user interactions",
   "scripts": {
+    "install-all": "npm install && npm --prefix server install && npm --prefix client install && npm --prefix docs install",
     "precommit": "npm run --prefix server precommit && npm run --prefix client precommit && npm run --prefix docs precommit"
   },
   "author": "Simon Karman",

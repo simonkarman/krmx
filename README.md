@@ -1,22 +1,22 @@
 # Krmx
-A TypeScript-based multi-client message sharing protocol build on top of WebSockets.
+Krmx is a network protocol for realtime multi-user interactions.
 
-Both the server and client implementations are published on npm under the [krmx](https://www.npmjs.com/org/krmx) organisation.
-
-## Using Krmx
+## Getting Started
 If you want to build your own application using Krmx, you should start be reading the [Krmx documentation](https://simonkarman.github.io/krmx).
 
-## Improving Krmx
+## Contributing
 If you want to help improve Krmx or add new features. You can create a pull request. You can find the different components in these directories:
 
-- **@krmx/server**: implementation in NodeJS in the [server/](./server) directory
-- **@krmx/client**: implementation in React in the [client/](./client) directory
-- **docs**: documentation of krmx written in Nextra in the [docs/](./docs) directory
-- **root**: the [module in the root directory](./package.json) uses Husky to set up a pre-commit git hook that executes `npm run precommit` in every submodule
+- [docs/](./docs): documentation of both the Krmx protocol and the reference implementations
+- [server/](./server): reference implementation of a Krmx server in TypeScript NodeJS
+- [client/](./client): reference implementation of a Krmx client as a React hook
+- [package.json](./package.json): root module that uses Husky to set up a pre-commit git hook that executes `npm run precommit` in every submodule
+
+Both the server and client implementations are published on npm under the [krmx](https://www.npmjs.com/org/krmx) npmjs organisation.
 
 > Possible upcoming features and ideas can be found in [features.md](./features.md).
 
 If you find any issues when using Krmx, then please create a ticket here: [krmx/issues](https://github.com/simonkarman/krmx/issues).
 
-## Author
-Original Author - [Simon Karman](https://www.simonkarman.nl).
+### Contributors
+- [Simon Karman](https://www.simonkarman.nl) - *creator of Krmx*

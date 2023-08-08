@@ -9,11 +9,11 @@ export default {
         <meta httpEquiv="Content-Language" content="en"/>
         <meta
           name="description"
-          content="Session Based User Interactions over WebSockets."
+          content="Krmx is a network protocol for realtime multi-user interactions."
         />
         <meta
           name="og:description"
-          content="Session Based User Interactions over WebSockets."
+          content="Krmx is a network protocol for realtime multi-user interactions."
         />
         <meta
           name="og:title"
@@ -21,17 +21,17 @@ export default {
         />
         <title>Krmx - Documentation</title>
         <meta name="apple-mobile-web-app-title" content="Krmx"/>
-        <link rel="icon" href="/favicon.ico" type="image/ico"/>
-        <link rel="icon" href="/favicon.png" type="image/png"/>
+        <link rel="icon" href="/krmx/favicon.ico" type="image/ico"/>
+        <link rel="icon" href="/krmx/favicon.png" type="image/png"/>
         <link
           rel="icon"
-          href="/favicon-dark.ico"
+          href="/krmx/favicon-dark.ico"
           type="image/ico"
           media="(prefers-color-scheme: dark)"
         />
         <link
           rel="icon"
-          href="/favicon-dark.png"
+          href="/krmx/favicon-dark.png"
           type="image/png"
           media="(prefers-color-scheme: dark)"
         />
@@ -50,7 +50,7 @@ export default {
     )
   },
   project: {
-    link: 'https://simonkarman.github.io/krmx'
+    link: 'https://github.com/simonkarman/krmx'
   },
   docsRepositoryBase: 'https://github.com/simonkarman/krmx/tree/main/docs'
 // ...
