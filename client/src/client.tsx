@@ -59,6 +59,7 @@ export const krmxSlice = createSlice({
 type MessageConsumer = <TMessage extends { type: string }>(message: TMessage) => void;
 type KrmxContextProps = {
   isConnected: boolean,
+  reconnect: (force: boolean) => void,
   link: (username: string) => void,
   send: MessageConsumer,
   unlink: () => void,
@@ -66,6 +67,7 @@ type KrmxContextProps = {
 } & KrmxState;
 const KrmxContext = createContext<KrmxContextProps>({
   isConnected: false,
+  reconnect: () => {},
   isLinked: false,
   username: '',
   rejectionReason: undefined,
@@ -86,6 +88,7 @@ export const KrmxProvider: FC<PropsWithChildren<{
   krmxStateSelector: (state: any) => KrmxState;
 }>> = (props) => {
   const ws = useRef(null as unknown as WebSocket);
+  const [connectionAttempt, setConnectionAttempt] = useState(0);
   const [status, setStatus] = useState<'waiting' | 'open' | 'closed'>('waiting');
   const dispatch = useDispatch();
 
@@ -111,7 +114,8 @@ export const KrmxProvider: FC<PropsWithChildren<{
   }, [status, send]);
 
   useEffect(() => {
-    const socket = new WebSocket(props.serverUrl);
+    const connectionAttemptSuffix = `${props.serverUrl.includes('?') ? '&' : '?'}connectionAttempt=${connectionAttempt}`;
+    const socket = new WebSocket(`${props.serverUrl}${connectionAttemptSuffix}`);
     socket.onerror = () => setStatus('closed');
     socket.onopen = () => {
       if (ws.current == socket) {
@@ -140,7 +144,13 @@ export const KrmxProvider: FC<PropsWithChildren<{
     return () => {
       socket.close();
     };
-  }, [props]);
+  }, [props, connectionAttempt]);
+
+  const reconnect = (force = false) => {
+    if (force || status !== 'open') {
+      setConnectionAttempt(connectionAttempt + 1);
+    }
+  };
 
   const username = useSelector((state) => props.krmxStateSelector(state).username);
   const rejectionReason = useSelector((state) => props.krmxStateSelector(state).rejectionReason);
@@ -148,6 +158,7 @@ export const KrmxProvider: FC<PropsWithChildren<{
   const users = useSelector((state) => props.krmxStateSelector(state).users);
   return <KrmxContext.Provider value={{
     isConnected: status === 'open',
+    reconnect,
     username,
     rejectionReason,
     isLinked,
