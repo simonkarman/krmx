@@ -114,19 +114,25 @@ export const KrmxProvider: FC<PropsWithChildren<{
     const socket = new WebSocket(props.serverUrl);
     socket.onerror = () => setStatus('closed');
     socket.onopen = () => {
-      setStatus('open');
+      if (ws.current == socket) {
+        setStatus('open');
+      }
     };
     socket.onclose = () => {
-      dispatch(krmxSlice.actions.reset({ username: '' }));
-      setStatus('closed');
+      if (ws.current == socket) {
+        dispatch(krmxSlice.actions.reset({ username: '' }));
+        setStatus('closed');
+      }
     };
     socket.onmessage = (rawMessage: { data: string | Buffer | ArrayBuffer | Buffer[] }) => {
-      const message: unknown = JSON.parse(rawMessage.data.toString());
-      if (typeof message === 'object' && message !== null && message && 'type' in message && typeof message.type === 'string') {
-        if (message.type.startsWith('user/')) {
-          dispatch(message);
-        } else {
-          props.onMessage(message as { type: string });
+      if (ws.current == socket) {
+        const message: unknown = JSON.parse(rawMessage.data.toString());
+        if (typeof message === 'object' && message !== null && message && 'type' in message && typeof message.type === 'string') {
+          if (message.type.startsWith('user/')) {
+            dispatch(message);
+          } else {
+            props.onMessage(message as { type: string });
+          }
         }
       }
     };
