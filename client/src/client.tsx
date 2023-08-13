@@ -59,7 +59,7 @@ export const krmxSlice = createSlice({
 type MessageConsumer = <TMessage extends { type: string }>(message: TMessage) => void;
 type KrmxContextProps = {
   isConnected: boolean,
-  reconnect: (force: boolean) => void,
+  reconnect: (force?: boolean) => void,
   link: (username: string) => void,
   send: MessageConsumer,
   unlink: () => void,
