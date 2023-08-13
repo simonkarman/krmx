@@ -343,14 +343,14 @@ class ServerImpl extends EventGenerator<Events> implements Server {
   private onConnectionOpen(socket: WebSocket, request: http.IncomingMessage): void {
     /* istanbul ignore next */
     if (this.status !== 'listening') {
-      this.logger('debug', `incoming connection is immediately discarded as the server is ${this.status}`);
-      socket.close();
+      this.logger('debug', `incoming connection is immediately terminated as the server is ${this.status}`);
+      socket.terminate();
       return;
     }
 
     if (!hasExpectedQueryParams(this.httpQueryParams, request.url)) {
-      this.logger('debug', 'incoming connection is immediately discarded as its query parameters are invalid');
-      socket.close();
+      this.logger('debug', 'incoming connection is immediately terminated as its query parameters are invalid');
+      socket.terminate();
       return;
     }
 
@@ -476,6 +476,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     for (const username in this.users) {
       this.leave(username);
     }
+    Object.values(this.connections).forEach(connection => { connection.socket.terminate(); });
     this.httpServer.close();
     this.httpServer.closeAllConnections();
   }
