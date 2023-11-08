@@ -10,7 +10,6 @@ import React, {
   useState,
 } from 'react';
 import { produce } from 'immer';
-import WebSocket from 'ws';
 
 interface ResetAction { type: 'reset', payload: { username: string } }
 interface UserRejectedMessage { type: 'user/rejected', payload: { reason: string } }

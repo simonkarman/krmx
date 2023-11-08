@@ -2,6 +2,8 @@ import React from 'react';
 import { create } from 'react-test-renderer';
 import { KrmxProvider, useKrmx } from '../src';
 
+global['WebSocket'] = require('ws');
+
 function MyApp(props: { serverUrl: string }) {
   return <KrmxProvider
     serverUrl={props.serverUrl}
