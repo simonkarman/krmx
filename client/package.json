@@ -1,6 +1,6 @@
 {
   "name": "@krmx/client",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "main": "dist/src/index.js",
   "author": "Simon Karman",
   "license": "ISC",
@@ -13,19 +13,16 @@
     "lint": "eslint . --ext .tsx --ext .ts",
     "prepublishOnly": "npm install && npm run precommit"
   },
-  "dependencies": {
-    "isomorphic-ws": "^5.0.0"
-  },
   "peerDependencies": {
-    "@reduxjs/toolkit": "1.9.x",
-    "react": "18.x",
-    "react-redux": "8.x"
+    "react": "^18.x",
+    "immer": "^10.x"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.22.5",
     "@babel/preset-react": "^7.22.5",
     "@types/jest": "^29.5.1",
     "@types/react-test-renderer": "^18.0.0",
+    "@types/ws": "^8.5.9",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "babel-jest": "^29.5.0",

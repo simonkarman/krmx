@@ -1,8 +1,7 @@
 import React from 'react';
 import { create } from 'react-test-renderer';
-import { KrmxProviderWithStore, useKrmx } from '../src';
+import { KrmxProvider, useKrmx } from '../src';
 
-const { KrmxProvider } = KrmxProviderWithStore();
 function MyApp(props: { serverUrl: string }) {
   return <KrmxProvider
     serverUrl={props.serverUrl}

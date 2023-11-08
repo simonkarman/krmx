@@ -1,7 +1,27 @@
-import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import React, { createContext, FC, PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { Provider, useDispatch, useSelector } from 'react-redux';
-import WebSocket from 'isomorphic-ws';
+import React, {
+  createContext,
+  FC,
+  PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
+import { produce } from 'immer';
+import WebSocket from 'ws';
+
+interface ResetAction { type: 'reset', payload: { username: string } }
+interface UserRejectedMessage { type: 'user/rejected', payload: { reason: string } }
+interface UserAcceptedMessage { type: 'user/accepted' }
+interface UserJoinedMessage { type: 'user/joined', payload: { username: string } }
+interface UserLinkedMessage { type: 'user/linked', payload: { username: string } }
+interface UserUnlinkedMessage { type: 'user/unlinked', payload: { username: string } }
+interface UserLeftMessage { type: 'user/left', payload: { username: string } }
+type FromServerMessage = UserRejectedMessage | UserAcceptedMessage | UserJoinedMessage |
+  UserLinkedMessage | UserUnlinkedMessage | UserLeftMessage;
+type Action = ResetAction | FromServerMessage;
 
 export type KrmxState = {
   username: string;
@@ -14,47 +34,44 @@ const initialState: KrmxState = {
   isLinked: false,
   users: {},
 };
-export const krmxSlice = createSlice({
-  name: 'user',
-  initialState,
-  reducers: {
-    reset: (_, action: PayloadAction<{ username: string }>) => {
+const reducer = (_state: KrmxState, action: Action) => {
+  return produce<KrmxState, KrmxState>(_state, state => {
+    switch (action.type) {
+    case 'reset':
       return {
         username: action.payload.username,
-        rejectionReason: undefined,
         isLinked: false,
         users: {},
-        latestLeaveReason: undefined,
       };
-    },
-    accepted: (state) => {
+    case 'user/accepted':
       state.rejectionReason = undefined;
-    },
-    rejected: (state, action: PayloadAction<{ reason: string }>) => {
+      break;
+    case 'user/rejected':
       state.rejectionReason = action.payload.reason;
-    },
-    joined: (state, action: PayloadAction<{ username: string }>) => {
+      break;
+    case 'user/joined':
       state.users[action.payload.username] = ({ isLinked: false });
-    },
-    linked: (state, action: PayloadAction<{ username: string }>) => {
-      const username = action.payload.username;
-      if (state.username === username) {
+      break;
+    case 'user/linked':
+      if (state.username === action.payload.username) {
         state.isLinked = true;
       }
-      state.users[username].isLinked = true;
-    },
-    unlinked: (state, action: PayloadAction<{ username: string }>) => {
-      const username = action.payload.username;
-      if (state.username === username) {
+      state.users[action.payload.username].isLinked = true;
+      break;
+    case 'user/unlinked':
+      if (state.username === action.payload.username) {
         state.isLinked = false;
       }
-      state.users[username].isLinked = false;
-    },
-    left: (state, action: PayloadAction<{ username: string, reason: string }>) => {
+      state.users[action.payload.username].isLinked = false;
+      break;
+    case 'user/left':
       delete state.users[action.payload.username];
-    },
-  },
-});
+      break;
+    default:
+      return state;
+    }
+  });
+};
 
 type MessageConsumer = <TMessage extends { type: string }>(message: TMessage) => void;
 type KrmxContextProps = {
@@ -84,13 +101,12 @@ export const useKrmx = function () {
 export const KrmxProvider: FC<PropsWithChildren<{
   serverUrl: string,
   onMessage: MessageConsumer,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  krmxStateSelector: (state: any) => KrmxState;
 }>> = (props) => {
   const ws = useRef(null as unknown as WebSocket);
   const [connectionAttempt, setConnectionAttempt] = useState(0);
   const [status, setStatus] = useState<'waiting' | 'open' | 'closed'>('waiting');
-  const dispatch = useDispatch();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [state, dispatch] = useReducer(reducer, initialState as unknown as any);
 
   const send: MessageConsumer = useCallback((message) => {
     if (status !== 'open') { return; }
@@ -99,7 +115,7 @@ export const KrmxProvider: FC<PropsWithChildren<{
 
   const link = useCallback((username: string) => {
     if (status !== 'open') { return; }
-    dispatch(krmxSlice.actions.reset({ username }));
+    dispatch({ type: 'reset', payload: { username } });
     send({ type: 'user/link', payload: { username } });
   }, [status, send]);
 
@@ -116,7 +132,11 @@ export const KrmxProvider: FC<PropsWithChildren<{
   useEffect(() => {
     const connectionAttemptSuffix = `${props.serverUrl.includes('?') ? '&' : '?'}connectionAttempt=${connectionAttempt}`;
     const socket = new WebSocket(`${props.serverUrl}${connectionAttemptSuffix}`);
-    socket.onerror = () => setStatus('closed');
+    socket.onerror = () => {
+      if (ws.current == socket) {
+        setStatus('closed');
+      }
+    };
     socket.onopen = () => {
       if (ws.current == socket) {
         setStatus('open');
@@ -124,7 +144,7 @@ export const KrmxProvider: FC<PropsWithChildren<{
     };
     socket.onclose = () => {
       if (ws.current == socket) {
-        dispatch(krmxSlice.actions.reset({ username: '' }));
+        dispatch({ type: 'reset', payload: { username: '' } });
         setStatus('closed');
       }
     };
@@ -133,7 +153,7 @@ export const KrmxProvider: FC<PropsWithChildren<{
         const message: unknown = JSON.parse(rawMessage.data.toString());
         if (typeof message === 'object' && message !== null && message && 'type' in message && typeof message.type === 'string') {
           if (message.type.startsWith('user/')) {
-            dispatch(message);
+            dispatch(message as FromServerMessage);
           } else {
             props.onMessage(message as { type: string });
           }
@@ -152,17 +172,13 @@ export const KrmxProvider: FC<PropsWithChildren<{
     }
   };
 
-  const username = useSelector((state) => props.krmxStateSelector(state).username);
-  const rejectionReason = useSelector((state) => props.krmxStateSelector(state).rejectionReason);
-  const isLinked = useSelector((state) => props.krmxStateSelector(state).isLinked);
-  const users = useSelector((state) => props.krmxStateSelector(state).users);
   return <KrmxContext.Provider value={{
     isConnected: status === 'open',
     reconnect,
-    username,
-    rejectionReason,
-    isLinked,
-    users,
+    username: state.username,
+    rejectionReason: state.rejectionReason,
+    isLinked: state.isLinked,
+    users: state.users,
     link,
     send,
     unlink,
@@ -171,37 +187,3 @@ export const KrmxProvider: FC<PropsWithChildren<{
     {props.children}
   </KrmxContext.Provider>;
 };
-
-/**
- * Note: Don't use this if you are already creating a redux store in your app. In that case, add the krmxSlice to your store and use KrmxProvider
- *  directly.
- *
- * Usage
- * ```ts
- * const { KrmxProvider } = KrmxProviderWithStore();
- * function MyApp() {
- *   return (
- *     <KrmxProvider
- *       serverUrl={...}
- *       onMessage={(message) => console.info(message)}
- *     >
- *       <MyComponent/>
- *     </KrmxProvider>
- *   );
- * }
- * ```
- */
-export function KrmxProviderWithStore(): { KrmxProvider: FC<PropsWithChildren<{serverUrl: string, onMessage: MessageConsumer}>>} {
-  const krmxStore = configureStore({
-    reducer: krmxSlice.reducer,
-  });
-  return {
-    KrmxProvider: (props: PropsWithChildren<{serverUrl: string, onMessage: MessageConsumer}>) => {
-      return (<Provider store={krmxStore}>
-        <KrmxProvider krmxStateSelector={(state: KrmxState) => state} {...props}>
-          {props.children}
-        </KrmxProvider>
-      </Provider>);
-    },
-  };
-}
