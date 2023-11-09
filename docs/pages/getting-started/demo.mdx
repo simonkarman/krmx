@@ -24,8 +24,8 @@ Now, we're going to set up a NodeJS TypeScript server using the [@krmx/server](h
 mkdir server
 cd server
 npm init -y
-npm install @krmx/server nodemon
-npm install ts-node @types/node typescript
+npm install --save-dev ts-node @types/node typescript nodemon
+npm install @krmx/server
 touch server.ts
 ```
 
@@ -59,14 +59,14 @@ Now start your server with `npm run dev`. Everytime you make changes to your `se
 
 If your server is up and running, Krmx clients should be able to connect using `ws://localhost:8082` on your local machine.
 
-> Keep the server process running. To continue with the demo below open a new terminal first.
+> To continue with the demo, you need to keep the server running. So before you continue, open a new terminal first.
 
 ## Create a Krmx client
-Now, we're going to set up a React client using the [@krmx/client](https://www.npmjs.com/package/@krmx/client) reference implementation.
+Next, we're going to set up a React client using the [@krmx/client](https://www.npmjs.com/package/@krmx/client) reference implementation.
 
 ```bash copy
 cd my-first-krmx-app
-npx create-next-app client --npm --ts --src-dir --eslint
+npx create-next-app client --use-npm --ts --src-dir --eslint --tailwind --app --import-alias '@/*'
 cd client
 npm install @krmx/client
 ```
@@ -74,12 +74,9 @@ npm install @krmx/client
 Then, you can create a simple React client using the following setup in `client/src/app/page.tsx`.
 ```js copy
 "use client";
-import { KrmxProviderWithStore, useKrmx } from '@krmx/client';
+import { KrmxProvider, useKrmx } from '@krmx/client';
 import { useState } from 'react';
 
-// Note: Don't use `KrmxProviderWithStore` if you are already creating a redux store in your app.
-//       In that case, add the exported `krmxSlice` to your store and use `KrmxProvider` directly.
-const { KrmxProvider } = KrmxProviderWithStore();
 export default function MyApp() {
   const [serverUrl] = useState('ws://localhost:8082');
   return (
