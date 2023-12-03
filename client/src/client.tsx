@@ -139,6 +139,10 @@ export const KrmxProvider: FC<PropsWithChildren<{
     socket.onopen = () => {
       if (ws.current == socket) {
         setStatus('open');
+        // On reconnect, when based on the state we're expected to be linked, immediately link!
+        if (state.isLinked && state.username !== '') {
+          link(state.username);
+        }
       }
     };
     socket.onclose = () => {
