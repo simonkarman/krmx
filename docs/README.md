@@ -10,7 +10,7 @@ npm install
 
 Then, you can start the documentation.
 ```bash
-npm run start
+npm start
 ```
 
 To view the documentation, open your browser on [http://localhost:3000/krmx](http://localhost:3000/krmx).
