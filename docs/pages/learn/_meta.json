@@ -1,8 +1,7 @@
 {
-  "index": "Learn Krmx",
+  "index": "Introduction",
   "core-concept": "Core Concept",
   "structure": "Structure",
-  "application-lifetime": "Application Lifetime",
-  "protocol": "Protocol",
+  "event-based": "Event Based",
   "limitations": "Limitations"
 }

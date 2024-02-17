@@ -1,0 +1,43 @@
+# Event Based
+The key responsibility of Krmx is to abstract away the complexity of individual websocket connections and to create a simple event-based API describing joining and leaving of users and linking and unlinking of those users to their websocket connections. These events describe the lifecycle of a Krmx server application.
+
+*(TODO: add link to the Krmx server states once that documentation is written.)*
+
+<img className='rounded-lg border my-8 p-2 bg-gray-100 max-w-[95%] mx-auto' src='/krmx/assets/krmx-events.png' />
+
+An overview of all available events on the server side of Krmx: `listen`, `join`, `link`, `message`, `unlink`, `leave`, and `close`. *(TODO: add link to the Krmx server payloads of these events once that documentation is written.)*
+
+> The 'join', 'link', 'unlink', and 'leave' events are propagated to all clients. This ensure that all clients are aware which (other)user sessions are participating in the server and which of these users are currently linked to a connection.
+
+> Most of the event-based API is available on both the server side and client side. The documentation focuses on the server side events. *(TODO: add link to client side api once it is written.)*
+
+## Events
+
+### 1. `listen` event
+First, the server needs to start. Once the server has started, a `listen` event is emitted to indicate that it is ready to accept (aka listen to) incoming websocket connections.
+
+### 2. `join` and `link` events
+Now, users can join the server. Every time a user joins the server, a `join` event is emitted to indicate that a new user has joined the server. This can be triggered for two reasons: (one) using the API on the server side to programmatically add a user or (two) by a websocket connection with valid authentication linking to the server for the first time.
+
+A user on the server is just a server-side entity that describes a long-lived user session. It keeps track of the username, authentication used, and the current active websocket connection. Every time a websocket connection links itself to a user session, a `link` event is emitted by the server to indicate that a user is ready to receive direct and/or broadcasts messages.
+
+A websocket connection can link to a single user session at a time. A user can only have one connection linked to it at a time.
+
+If a websocket connection authenticates as a user not yet present on the server, the server will have that user join and link. The `join` and `link` events are emitted in that order.
+
+### 3. `message` event
+Once a user is linked to a connection it can start sending messages. The server will emit a `message` event every time a client send a message to the server.
+
+Similarly, the server can send messages to its linked users. A server can broadcast a message, which means that the server will the same message to all users that are linked. Or, the server can send a direct message to one of its linked users.
+
+### 4. `unlink` and `leave` events
+A connection can unlink from a user. This can happen, for example if the connection drops or if the connection indicates to the server that it wants to unlink intentionally. After a user is unlinked from its connection, it allows another connection to seamlessly link to the user again. After a connection unlinked intentionally it can also be used to link to another user.
+
+If a client wants to leave the server. It can do so by stating explicitly to the server that it wants to do so. Any time a client leaves the server a `leave` event is emitted. If the client was still linked to a connection at that moment, the `leave` event is preceded by a `unlink` event. The server can also forcefully make a user leave by kicking it from the server.
+
+When a user leaves, 'unlink' and 'leave' events are emitted in that order.
+
+> No events regarding the raw/individual websocket connections opening and closing from a client to the server are emitted. **This is by design**. Individual websocket connections are completely hidden from the API to ensure that the developer can solely focus on the concept of users and whether or not that a user a has an active connection available.
+
+### 5. `close` event
+When the server wants to shut down, it will first stop accepting new connections. Then, all users will be kicked (see `unlink` and `leave` events for more information on kicking of users). Finally, once all users have been kicked the server will close. Once the server has closed, a `close` event is emitted to indicate that it is no longer accepting new connections.

@@ -1,11 +1,29 @@
 # Structure
 A high level overview of the structure of the Krmx library.
 
-<img className='my-8 max-w-[70%] mx-auto' src='/krmx/assets/krmx-high-level-overview.png' />
+<img className='my-8 max-w-[70%] mx-auto' src='/krmx/assets/krmx-structure.png' />
 
-TODO: Moreover the difference in terminology of the 'websocket connections', 'clients', and 'users' are key to understanding how Krmx works and how it can be used effectively.
+In Krmx there are three main components: The **client side** (purple), the **server side** (green) and the **connection** (orange).
 
-# Terminology
+Krmx is designed for *multi*-user experiences. Consequently, a server will in general have many clients with their own websocket connection connected simultaneously.
+
+The **server side** is responsible for tracking all connections to the server and to which users these connections are linked. In most situation the server side also keeps track of a shared state of the application, allowing users to modify this state by sending messages which are handled by application-specific logic that alter the state.
+
+The **client side** is responsible for presenting the (partial) state to the user and allowing the user to interact with the client. When a client connects to the server it first has to link its connection to a user. To do this, it has to authenticate. If authentication succeeds, the server will link the connection the the corresponding user. A connection can only be linked to a single user at a time.
+
+Once linked, a client can send message to and receive messages from the server. **Websocket connections** are used for the bi-directional communication between the client and server side.
+
+Krmx decouples individual websocket connections from the users. This ensures that user sessions are persisted across potentially many connections. If a connection drops, the user is unlinked from a connection and is required to link again using a new connection.
+
+> Example: Imagine that a client sets up websocket connection 'abc' to the server and authenticates to link to user Simon. Then, connection 'abc' drops. This results in an unlinked user Simon, as it no longer has an active connection. Next, the client sets up a new connection 'def'. Connection 'def' also authenticates as user Simon and can seamlessly continue where connection 'abc' left off.
+
+Keep in mind that even though a connection can only be linked to a single user at a time, the connection can be reused to link to another user after it unlinked.
+
+In Krmx all clients will receive updates about the users that have authenticated to the server and for each user whether it is currently linked or unlinked.
+
+The Krmx API on server and client side abstract away this complexity and allows the developer to consume a simple event-based API. The [application lifetime](application-lifetime) describes these events in more detail.
+
+## Terminology
 | name        | description                                                                                    |
 |-------------|------------------------------------------------------------------------------------------------|
 | krmx        | the protocol used for realtime multi-user interactions                                         |

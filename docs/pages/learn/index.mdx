@@ -1,9 +1,9 @@
-# Learn Krmx
+# Introduction
 
-When building applications with Krmx, it is important to understand the different components and key concepts. These subjects, including limitations and terminology are explained in the 'Learn Krmx' chapter.
+When building applications with Krmx, it is important to understand the different components and key concepts. These and more are explained in this chapter.
 
-## Introduction
-**Krmx** is a network protocol for realtime multi-user interactions. In other words: Krmx uses a server, (one or more) clients, and websocket connections to facilitate multiple users to interact together in realtime.
+## Krmx
+**Krmx** is a network protocol for realtime multi-user interactions. In other words: The Krmx protocol uses a server and multiple clients connected with websocket connections to facilitate multiple users to interact together in realtime.
 
 The key responsibility of Krmx is to abstract away the complexity of individual websocket connections so that the application developer (you!) can focus on the interactive experience between the clients.
 
@@ -15,7 +15,8 @@ import { Card, Cards } from 'nextra/components';
 <Cards num={2}>
   <Card title="1. Core Concept" href="learn/core-concept" />
   <Card title="2. Structure" href="learn/structure" />
-  <Card title="3. Application Lifetime" href="learn/application-lifetime" />
-  <Card title="4. Protocol" href="learn/protocol" />
-  <Card title="5. Limitations" href="learn/limitations" />
+  <Card title="3. Event Based" href="learn/event-based" />
+  <Card title="4. Limitations" href="learn/limitations" />
 </Cards>
+
+If you're looking for the API documentation instead, then please take a look at the [API level documentation of the Server](../server) or the [API level documentation of the Clients](../clients).
