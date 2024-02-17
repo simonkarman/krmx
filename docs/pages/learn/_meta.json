@@ -1,5 +1,8 @@
 {
-  "index": "Introduction",
+  "index": "Learn Krmx",
+  "core-concept": "Core Concept",
+  "structure": "Structure",
+  "application-lifetime": "Application Lifetime",
   "protocol": "Protocol",
-  "middleware": "Middleware"
+  "limitations": "Limitations"
 }

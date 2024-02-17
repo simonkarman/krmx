@@ -1,0 +1,28 @@
+# Application Lifetime
+The key responsibility of Krmx is to abstract away the complexity of individual websocket connections and to create a simple API describing joining and leaving of users and linking and unlinking of users to their websocket connections.
+
+Because the client-side is in essence just a view of the state, the server-side is where the actual (business) logic of your application resides. On the server side a concise event-based API is available.
+
+<img className='rounded-lg border my-8 p-2 bg-gray-100 max-w-[95%] mx-auto' src='/krmx/assets/krmx-events.png' />
+An overview of all available events on the server side of Krmx. (TODO: move 'with auth' to the 'link' arrow as that is where the authentication takes place.)
+
+The available events describe the lifetime of a Krmx server application. First, the server needs to start. Once the server has started, a '*listen*' event is emitted to indicate that it is ready to accept (aka listen to) incoming websocket connections.
+
+Now, users can join the server. Every time a user joins the server, a '*join*' event is emitted to indicate that a new user has joined the server. This can be triggered for two reasons: (one) using the API on the server side to programmatically add a user or (two) by a websocket connection with valid authentication linking to the server for the first time.
+
+A user on the server is just a server-side entity that describes a long-lived user session. It keeps track of the username, authentication used, and the current active websocket connection. Every time a websocket connection links itself to a user session, a *link* event is emitted by the server to indicate that a user is ready to receive direct and/or broadcasts messages.
+
+Only one websocket connection can link to a single user session.
+
+If a user joins directly from a websocket connection a 'join' and 'link' events are emitted in that order. When a user leaves, 'unlink' and 'leave' events are emitted in that order.
+
+The 'join', 'link', 'unlink', and 'leave' events are propagated to all clients.
+
+Once a user exists and it is linked to a connection it can start sending messages. The server will emit a '*message*' event every time a client send a message to the
+
+TODO: text one the following:
+- *message* -
+- *unlink* -
+- *link* (again) -
+- *leave* -
+- *clonse* -

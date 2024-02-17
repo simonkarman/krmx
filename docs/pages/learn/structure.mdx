@@ -1,0 +1,17 @@
+# Structure
+A high level overview of the structure of the Krmx library.
+
+<img className='my-8 max-w-[70%] mx-auto' src='/krmx/assets/krmx-high-level-overview.png' />
+
+TODO: Moreover the difference in terminology of the 'websocket connections', 'clients', and 'users' are key to understanding how Krmx works and how it can be used effectively.
+
+# Terminology
+| name        | description                                                                                    |
+|-------------|------------------------------------------------------------------------------------------------|
+| krmx        | the protocol used for realtime multi-user interactions                                         |
+| server      | an application running a krmx server                                                           |
+| client      | an application (f.e. React App) that connects to a krmx server                                 |
+| connection  | a websocket connection between a server and a client                                           |
+| user        | an client controlled entity on the server that a connection can link to                        |
+| (un)linking | the act of linking or unlinking a connection to or from a user                                 |
+| application | the complete system formed by a server and clients to serve interactive functionality to users |

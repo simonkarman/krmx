@@ -1,101 +1,21 @@
 # Learn Krmx
 
+When building applications with Krmx, it is important to understand the different components and key concepts. These subjects, including limitations and terminology are explained in the 'Learn Krmx' chapter.
+
+## Introduction
 **Krmx** is a network protocol for realtime multi-user interactions. In other words: Krmx uses a server, (one or more) clients, and websocket connections to facilitate multiple users to interact together in realtime.
 
-To make the most of building applications with Krmx it is important to understand the different components and the most common use case. Moreover the difference in terminology of the 'websocket connections', 'clients', and 'users' are key to understanding how Krmx works and how it can be used effectively.
+The key responsibility of Krmx is to abstract away the complexity of individual websocket connections so that the application developer (you!) can focus on the interactive experience between the clients.
 
-These subjects, including limitations and terminology are explained in this article.
+## Topics
+On which topic would you like to learn about Krmx?
 
-## Components
-The image below shows a high level overview of the components that make up Krmx.
+import { Card, Cards } from 'nextra/components';
 
-<img className='my-8 max-w-[70%] mx-auto' src='/krmx/assets/krmx-high-level-overview.png' />
-
-TODO!
-
-## Use Cases
-Krmx is the right solution if you're building a (web) application that is designed for users to interact with each other in realtime during a session. A great example of this is multiplayer (board)games, which is the use case around which Krmx was initially designed.
-
-Let us walk through the core Krmx concepts in the context of a board game.
-
-<img className='my-8 mx-auto bg-gray-100 rounded' src='/krmx/assets/boardgame-multiplayer-0.png' />
-
-**Imagine the server being equivalent to the table on which the board game will be played**. On the table all the cards, dices and other board game pieces required to play the game are placed, this is the board state.
-
-The table / server conceptually also knows which interactions and actions can be taken. It also keeps track of which players are playing the game.
-
-**Imagine the client being equivalent to a player**. A player is the person that would like to participate in playing the board game. When a player enters the room and indicates he wants to participate, the server will make room for that player on the table to play the game. **Imagine the joining and leaving of client being equivalent to a person entering and leaving the room in which the table is standing**.
-
-<img className='my-8 mx-auto bg-gray-100 rounded' src='/krmx/assets/boardgame-multiplayer-1.png' />
-
-Next, a player needs a chair to sit on to join at the table. **Imagine the websocket connection being equivalent to the chair on which the player sits**. Each player needs its own chair. In other words: each client has its own connection to the server.
-
-**Imagine the linking and unlinking from a connection being equivalent to the player sitting down or standing up from its chair**. When a player is unlinked it hasn't picked a chair to sit down on yet. When a player is linked, it is sitting down on a chair and can actively participate in the board game.
-
-When a chair breaks down a player needs a replacement chair. This concept is equivalent to the websocket connection of a client disconnecting and the client then the reconnecting using a new websocket connection. Even though the connection was unlinked and (re)linked, the session information is persisted. The 'chairs / connections' are not coupled to the 'players sitting on them / clients using them'.
-
-<img className='my-8 mx-auto bg-gray-100 rounded' src='/krmx/assets/boardgame-multiplayer-2.png' />
-
-**Imaging the retrieval of the board state as being equivalent to the player looking at the table and observing the board state**. Each player can retrieve the board state. In most games some information is hidden to the players. Such as a deck of cards laying face down on the table. The players will be able to observe that their is a deck of cards phase down on the table. However, the exact cards in the deck are unknown. In other words: the players retrieve the board state partially.
-
-In most games there is also board state that is visible to only some of the players. An example is the hand of cards of a player. The player itself can see the exact cards in their own hand, however a player can only see the amount of cards that other players have in their hand. This means that the partial state that each player can observe can be unique.
-
-<img className='my-8 mx-auto bg-gray-100 rounded' src='/krmx/assets/boardgame-multiplayer-3.png' />
-
-What we need next are interactions. The players need to be able to interact with the board state in specific ways to alter the board state. These are the actions that a player can take. The specific actions a player are dependent on the game state, such as "who's turn it is", "the cards you have in hand", or "how much money the player has".
-
-**Imagine the sending of a message from a client to the server being equivalent to a player taking an action by interacting with the table**.
-
-When a player takes an action, all other players at the table will observe the change this action has made to the board state. **Imagine the broadcasting of a message from the server to the clients being the equivalent of a board state change being observed by the (other) players**. This is what makes the board game realtime.
-
-<img className='my-8 mx-auto bg-gray-100 rounded' src='/krmx/assets/boardgame-multiplayer-4.png' />
-
-Now it should make sense why Krmx uses WebSockets connections; to allow for realtime communication and to allow for the bi-directional flow of data (client to server AND server to client).
-
-Although this example applies to board game, Krmx can be used for a wide range of application requiring multiple users to interact with each-other in realtime.
-
-> Keep in mind that Krmx is entirely agnostic to the way the board state is organised, to the way the clients retrieve their (partial) view of the board state, and to the way the clients take their actions. The responsibility of Krmx ends as the players are sitting down at the table ready to play a game. The table is the empty canvas on which you can create your interactive experience and websocket connections are provided for the realtime bi-directional flow of information between table / server and players / clients.
->
-> If you don't want to implement state and interaction logic yourself, you can use the '[Krmx Best Practices](https://github.com/simonkarman/krmx-best-practices)' project to bootstrap your project. This project tackles common functionality such as state management, optimistic updates, and more.
-
-## Connections vs Client
-The key responsibility of Krmx is to abstract away the complexity of individual websocket connections and to create a simple API describing joining and leaving of users and linking and unlinking of users to their websocket connections.
-
-Because the client-side is in essence just a view of the state, the server-side is where the actual (business) logic of your application resides. On the server side a concise event-based API is available.
-
-<img className='rounded-lg border my-8 p-2 bg-gray-100 max-w-[95%] mx-auto' src='/krmx/assets/krmx-events.png' />
-An overview of all available events on the server side of Krmx. > TODO: move 'with auth' to the 'link' arrow as that is where the authentication takes place.
-
-This available events describes the entire lifetime of a Krmx server application. First, the server needs to start. Once the server has started, a '*listen*' event is emitted to indicate that it is ready to accept (aka listen to) incoming websocket connections.
-
-Now, users can join the server. Every time a user joins the server, a '*join*' event is emitted to indicate that a new user has joined the server. This can be triggered for two reasons: (one) using the API on the server side to programmatically add a user or (two) by a websocket connection with valid authentication linking to the server for the first time.
-
-A user on the server is just a server-side entity that describes a long-lived user session. It keeps track of the username, authentication used, and the current active websocket connection. Every time a websocket connection links itself to a user session, a *link* event is emitted by the server to indicate that a user is ready to receive direct and/or broadcasts messages.
-
-Only one websocket connection can link to a single user session.
-
-If a user joins directly from a websocket connection a 'join' and 'link' events are emitted in that order. When a user leaves, 'unlink' and 'leave' events are emitted in that order.
-
-The 'join', 'link', 'unlink', and 'leave' events are propagated to all clients.
-
-Once a user exists and it is linked to a connection it can start sending messages. The server will emit a '*message*' event every time a client send a message to the
-
-TODO: text one the following:
-- *message* -
-- *unlink* -
-- *link* (again) -
-- *leave* -
-- *clonse* -
-
-# Limitations
-
-# Terminology
-| name        | description                                                                                    |
-|-------------|------------------------------------------------------------------------------------------------|
-| krmx        | the protocol used for realtime multi-user interactions                                         |
-| server      | an application running a krmx server                                                           |
-| client      | an application (f.e. React App) that connects to a krmx server                                 |
-| connection  | a websocket connection between a server and a client                                           |
-| user        | an client controlled entity on the server that a connection can link to                        |
-| (un)linking | the act of linking or unlinking a connection to or from a user                                 |
-| application | the complete system formed by a server and clients to serve interactive functionality to users |
+<Cards num={2}>
+  <Card title="1. Core Concept" href="learn/core-concept" />
+  <Card title="2. Structure" href="learn/structure" />
+  <Card title="3. Application Lifetime" href="learn/application-lifetime" />
+  <Card title="4. Protocol" href="learn/protocol" />
+  <Card title="5. Limitations" href="learn/limitations" />
+</Cards>
