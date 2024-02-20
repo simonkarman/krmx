@@ -114,10 +114,10 @@ export const KrmxProvider: FC<PropsWithChildren<{
     ws.current?.send(JSON.stringify(message));
   }, [status, ws]);
 
-  const link = useCallback((username: string) => {
+  const link = useCallback((username: string, auth?: string) => {
     if (status !== 'open') { return; }
     dispatch({ type: 'reset', payload: { username } });
-    send({ type: 'krmx/link', payload: { username, version: VERSION } });
+    send({ type: 'krmx/link', payload: { username, version: VERSION, auth } });
   }, [status, send]);
 
   const unlink = useCallback(() => {

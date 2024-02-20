@@ -82,7 +82,7 @@ describe('Krmx Server', () => {
       const simon = await addUser('simon');
       await sleep();
       expect(simon.emit.message).toHaveBeenCalledWith({ type: 'krmx/accepted' });
-      expect(serverEmit.authenticate).toHaveBeenCalledWith('simon', true, expect.any(Function));
+      expect(serverEmit.authenticate).toHaveBeenCalledWith('simon', { isNewUser: true }, expect.any(Function));
       expect(serverEmit.join).toHaveBeenCalledWith('simon');
       expect(serverEmit.link).toHaveBeenCalledWith('simon');
     }),
@@ -124,6 +124,7 @@ describe('Krmx Server', () => {
       { type: 'krmx/link', payload: { version: 11, username: 'simon' } },
       { type: 'krmx/link', payload: { missing: 'incorrect', username: 'simon' } },
       { type: 'krmx/link', payload: { version: 11, username: 11 } },
+      { type: 'krmx/link', payload: { version: 'abc', username: 'simon', auth: 11 } },
       { type: 'krmx/link', payload: 3 },
       { type: 'krmx/link' },
     ]),
@@ -480,8 +481,14 @@ describe('Krmx Server', () => {
 
   it('should reject linking a connection to a user, if the reject callback in the authenticate event is called with a reason',
     withServer(async ({ server, serverEmit, addUser }) => {
-      server.on('authenticate', (username: string, isNewUser: boolean, reject: (reason: string) => void) => {
-        if (!isNewUser) {
+      server.on('authenticate', (username: string, info, reject: (reason: string) => void) => {
+        // tests that info.auth is provided correctly
+        if (info.auth === 'i-am-a-robot') {
+          reject('robots-are-not-allowed');
+          return;
+        }
+        // tests that info.isNewUser is provided correctly
+        if (!info.isNewUser) {
           reject('relinking is not allowed here');
         } else if (server.getUsers().length >= 1) {
           reject('server is full');
@@ -493,7 +500,8 @@ describe('Krmx Server', () => {
       await sleep();
       await expect(addUser('simon')).rejects.toBe('relinking is not allowed here');
       await expect(addUser('lisa')).rejects.toBe('server is full');
-      expect(serverEmit.authenticate).toHaveBeenCalledTimes(3);
+      await expect(addUser('simon', 'i-am-a-robot')).rejects.toBe('robots-are-not-allowed');
+      expect(serverEmit.authenticate).toHaveBeenCalledTimes(4);
       expect(serverEmit.join).toHaveBeenCalledTimes(1);
     }),
   );

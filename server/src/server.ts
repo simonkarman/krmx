@@ -6,7 +6,7 @@ import { EventGenerator, EventEmitter } from './event-generator';
 import { ExpectedQueryParams, hasExpectedQueryParams } from './utils';
 import { VERSION } from './version';
 
-interface LinkMessage { type: 'krmx/link', payload: { username: string, version: string } }
+interface LinkMessage { type: 'krmx/link', payload: { username: string, version: string, auth?: string } }
 interface UnlinkMessage { type: 'krmx/unlink' }
 interface LeaveMessage { type: 'krmx/leave' }
 type FromConnectionMessage = LinkMessage | UnlinkMessage | LeaveMessage;
@@ -153,10 +153,12 @@ export type Events = {
    * This event is emitted before a connection tries to link to a user.
    *
    * @param username The username that the connection is trying to link to.
-   * @param isNewUser Whether this username belongs to a user already known to the server (false) or a new user that will be created if linking succeeds (true).
+   * @param info Additional information about the connection trying to link to the user.
+   *             info.isNewUser -- Whether this username belongs to a user already known to the server (false) or a new user that will be created if linking succeeds (true).
+   *             info.auth -- An authentication token as a string, if provided by the client. That can be used to verify the authentication of the user. For example a JWT token.
    * @param reject A reject callback that, if invoked, will reject the linking to the user with the provided reason.
    */
-  authenticate: [username: string, isNewUser: boolean, reject: (reason: string) => void];
+  authenticate: [username: string, info: { isNewUser: boolean, auth?: string }, reject: (reason: string) => void];
 
   /**
    * This event is emitted every time a user has joined.
@@ -414,11 +416,12 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       !('payload' in message)
       || typeof (message.payload.username as unknown) !== 'string'
       || typeof (message.payload.version as unknown) !== 'string'
+      || (typeof (message.payload.auth as unknown) !== 'undefined' && typeof (message.payload.auth as unknown) !== 'string')
     ) {
       reject('invalid link request');
       return;
     }
-    const { username, version: clientVersion } = message.payload;
+    const { username, version: clientVersion, auth } = message.payload;
     const serverVersionWithoutPatch = VERSION.substring(0, VERSION.lastIndexOf('.'));
     if (!clientVersion.startsWith(serverVersionWithoutPatch)) {
       reject(`krmx server version mismatch (server=${serverVersionWithoutPatch}.*,client=${clientVersion})`);
@@ -437,7 +440,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       reject(`user ${username} is already linked to a connection`);
       return;
     }
-    this.emit('authenticate', username, isNewUser, reject);
+    this.emit('authenticate', username, { isNewUser, auth }, reject);
     if (rejected) {
       return;
     }

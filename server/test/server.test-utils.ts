@@ -6,7 +6,7 @@ export const sleep = (ms = 75) => new Promise((r) => setTimeout(r, ms));
 export interface ServerEmit {
   listen: jest.Mock<void, [number]>;
   close: jest.Mock<void, []>;
-  authenticate: jest.Mock<void, [string, boolean, (reason: string) => void]>;
+  authenticate: jest.Mock<void, [string, { isNewUser: boolean, auth?: string }, (reason: string) => void]>;
   join: jest.Mock<void, [string]>;
   link: jest.Mock<void, [string]>;
   unlink: jest.Mock<void, [string]>;
@@ -29,7 +29,7 @@ export interface User {
 export function withServer<TScenario>(callback: (props: {
   server: Server,
   serverEmit: ServerEmit,
-  addUser: (username?: string) => Promise<User>,
+  addUser: (username?: string, auth?: string) => Promise<User>,
   scenario: { index: number, value: TScenario },
 }) => Promise<void>, scenarios?: TScenario[]): () => Promise<void> {
   return withCustomServer({}, callback, scenarios);
@@ -38,7 +38,7 @@ export function withServer<TScenario>(callback: (props: {
 export function withCustomServer<TScenario>(serverProps: Props, callback: (props: {
   server: Server,
   serverEmit: ServerEmit,
-  addUser: (username?: string) => Promise<User>,
+  addUser: (username?: string, auth?: string) => Promise<User>,
   scenario: { index: number, value: TScenario },
 }) => Promise<void>, scenarios?: TScenario[]): () => Promise<void> {
   return async () => {
@@ -55,7 +55,7 @@ export function withCustomServer<TScenario>(serverProps: Props, callback: (props
     };
     server.on('listen', (port) => serverEmit.listen(port));
     server.on('close', () => serverEmit.close());
-    server.on('authenticate', (username, isNewUser, reject) => {serverEmit.authenticate(username, isNewUser, reject);});
+    server.on('authenticate', (username, info, reject) => {serverEmit.authenticate(username, info, reject);});
     server.on('join', (username) => serverEmit.join(username));
     server.on('link', (username) => serverEmit.link(username));
     server.on('unlink', (username) => serverEmit.unlink(username));
@@ -69,7 +69,7 @@ export function withCustomServer<TScenario>(serverProps: Props, callback: (props
     const users: ws.WebSocket[] = [];
     const path = serverProps?.http?.path || '/';
     const url = `ws:127.0.0.1:${port}${path.startsWith('/') ? path : `/${path}`}`;
-    const addUser = async (username?: string): Promise<User> => {
+    const addUser = async (username?: string, auth?: string): Promise<User> => {
       const user = new ws.WebSocket(url);
       users.push(user);
       const userEmit: UserEmit = {
@@ -91,7 +91,7 @@ export function withCustomServer<TScenario>(serverProps: Props, callback: (props
             }
           });
           user.on('open', () => {
-            const userLinkMessage = { type: 'krmx/link', payload: { username, version: VERSION } };
+            const userLinkMessage = { type: 'krmx/link', payload: { username, version: VERSION, auth } };
             user.send(JSON.stringify(userLinkMessage));
           });
           user.on('close', () => reject('connection closed'));
