@@ -1,6 +1,6 @@
 {
   "name": "@krmx/server",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "main": "dist/src/index.js",
   "author": "Simon Karman",
   "license": "ISC",
@@ -9,7 +9,8 @@
   "scripts": {
     "start": "nodemon --exec \"ts-node src/index.ts\" src/index.ts",
     "test": "jest --coverage --silent --verbose",
-    "precommit": "npm run lint && npm run test && npm run build",
+    "precommit": "npm run postversion && npm run lint && npm run test && npm run build",
+    "postversion": "node -p \"'export const VERSION = \\'' + require('./package.json').version + '\\';'\" > src/version.ts",
     "build": "rm -rf dist && tsc",
     "lint": "eslint . --ext .ts",
     "prepublishOnly": "npm install && npm run precommit"

@@ -1,5 +1,5 @@
 import ws from 'ws';
-import { createServer, Message, Props, Server } from '../src';
+import { createServer, Message, Props, Server, VERSION } from '../src';
 
 export const sleep = (ms = 75) => new Promise((r) => setTimeout(r, ms));
 
@@ -91,7 +91,7 @@ export function withCustomServer<TScenario>(serverProps: Props, callback: (props
             }
           });
           user.on('open', () => {
-            const userLinkMessage = { type: 'krmx/link', payload: { username } };
+            const userLinkMessage = { type: 'krmx/link', payload: { username, version: VERSION } };
             user.send(JSON.stringify(userLinkMessage));
           });
           user.on('close', () => reject('connection closed'));

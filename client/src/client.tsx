@@ -10,6 +10,7 @@ import React, {
   useState,
 } from 'react';
 import { produce } from 'immer';
+import { VERSION } from './version';
 
 interface RejectedMessage { type: 'krmx/rejected', payload: { reason: string } }
 interface AcceptedMessage { type: 'krmx/accepted' }
@@ -116,7 +117,7 @@ export const KrmxProvider: FC<PropsWithChildren<{
   const link = useCallback((username: string) => {
     if (status !== 'open') { return; }
     dispatch({ type: 'reset', payload: { username } });
-    send({ type: 'krmx/link', payload: { username } });
+    send({ type: 'krmx/link', payload: { username, version: VERSION } });
   }, [status, send]);
 
   const unlink = useCallback(() => {

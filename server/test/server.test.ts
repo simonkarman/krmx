@@ -1,6 +1,6 @@
 import http from 'http';
 import { AddressInfo } from 'ws';
-import { createServer, Status } from '../src';
+import { createServer, Status, VERSION } from '../src';
 import { sleep, withCustomServer, withServer } from './server.test-utils';
 
 describe('Krmx Server', () => {
@@ -88,6 +88,29 @@ describe('Krmx Server', () => {
     }),
   );
 
+  it('should not accept a user with minor or major version mismatch in the link message',
+    withServer(async ({ addUser }) => {
+      const user = await addUser();
+      const fakeVersion = `1${VERSION}`;
+      user.send({ type: 'krmx/link', payload: { username: 'simon', version: fakeVersion } });
+      await sleep();
+      const serverVersionWithoutPatch = VERSION.substring(0, VERSION.lastIndexOf('.'));
+      expect(user.emit.message).toHaveBeenCalledWith({ type: 'krmx/rejected', payload: {
+        reason: `krmx server version mismatch (server=${serverVersionWithoutPatch}.*,client=${fakeVersion})`,
+      } });
+    }),
+  );
+
+  it('should accept a user with a patch mismatch in the link message',
+    withServer(async ({ addUser }) => {
+      const user = await addUser();
+      const fakeVersion = `${VERSION}1`;
+      user.send({ type: 'krmx/link', payload: { username: 'simon', version: fakeVersion } });
+      await sleep();
+      expect(user.emit.message).toHaveBeenCalledWith({ type: 'krmx/accepted' });
+    }),
+  );
+
   it('should reject authentication when an invalid link message is received',
     withServer(async ({ addUser, scenario }) => {
       const user = await addUser();
@@ -96,17 +119,20 @@ describe('Krmx Server', () => {
       expect(user.emit.message).toHaveBeenCalledWith({ type: 'krmx/rejected', payload: { reason: 'invalid link request' } });
       expect(user.emit.close).not.toHaveBeenCalled();
     }, [
-      { type: 'krmx/link', payload: { username: 11 } },
-      { type: 'krmx/link', payload: { missing: 'incorrect' } },
+      { type: 'krmx/link', payload: { version: 'abc', username: 11 } },
+      { type: 'krmx/link', payload: { version: 'def', missing: 'incorrect' } },
+      { type: 'krmx/link', payload: { version: 11, username: 'simon' } },
+      { type: 'krmx/link', payload: { missing: 'incorrect', username: 'simon' } },
+      { type: 'krmx/link', payload: { version: 11, username: 11 } },
       { type: 'krmx/link', payload: 3 },
       { type: 'krmx/link' },
     ]),
   );
 
-  it('should unlink a connection when it sends an link message when already linked to a user',
+  it('should unlink a connection when it sends a link message while already linked to a user',
     withServer(async ({ serverEmit, addUser }) => {
       const simon = await addUser('simon');
-      const linkMessage = { type: 'krmx/link', payload: { username: 'simon' } };
+      const linkMessage = { type: 'krmx/link', payload: { username: 'simon', version: VERSION } };
       simon.send(linkMessage);
       await sleep();
       expect(serverEmit.unlink).toHaveBeenCalledWith('simon');
@@ -441,12 +467,12 @@ describe('Krmx Server', () => {
       await addUser('simon');
       const user = await addUser();
       await sleep();
-      user.send({ type: 'krmx/link', payload: { username: 'simon' } });
+      user.send({ type: 'krmx/link', payload: { username: 'simon', version: VERSION } });
       await sleep();
       expect(user.emit.message).toHaveBeenCalledWith({
         type: 'krmx/rejected', payload: { reason: 'user simon is already linked to a connection' },
       });
-      user.send({ type: 'krmx/link', payload: { username: 'lisa' } });
+      user.send({ type: 'krmx/link', payload: { username: 'lisa', version: VERSION } });
       await sleep();
       expect(user.emit.message).toHaveBeenCalledWith({ type: 'krmx/accepted' });
     }),

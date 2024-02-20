@@ -4,8 +4,9 @@ import short from 'short-uuid';
 import ws, { AddressInfo, RawData, WebSocket, WebSocketServer } from 'ws';
 import { EventGenerator, EventEmitter } from './event-generator';
 import { ExpectedQueryParams, hasExpectedQueryParams } from './utils';
+import { VERSION } from './version';
 
-interface LinkMessage { type: 'krmx/link', payload: { username: string } }
+interface LinkMessage { type: 'krmx/link', payload: { username: string, version: string } }
 interface UnlinkMessage { type: 'krmx/unlink' }
 interface LeaveMessage { type: 'krmx/leave' }
 type FromConnectionMessage = LinkMessage | UnlinkMessage | LeaveMessage;
@@ -409,11 +410,20 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       reject('unlinked connection');
       return;
     }
-    if (!('payload' in message) || typeof (message.payload.username as unknown) !== 'string') {
+    if (
+      !('payload' in message)
+      || typeof (message.payload.username as unknown) !== 'string'
+      || typeof (message.payload.version as unknown) !== 'string'
+    ) {
       reject('invalid link request');
       return;
     }
-    const { username } = message.payload;
+    const { username, version: clientVersion } = message.payload;
+    const serverVersionWithoutPatch = VERSION.substring(0, VERSION.lastIndexOf('.'));
+    if (!clientVersion.startsWith(serverVersionWithoutPatch)) {
+      reject(`krmx server version mismatch (server=${serverVersionWithoutPatch}.*,client=${clientVersion})`);
+      return;
+    }
     if (!this.isValidUsername(username)) {
       reject('invalid username');
       return;
