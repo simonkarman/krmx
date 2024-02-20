@@ -5,19 +5,19 @@ import ws, { AddressInfo, RawData, WebSocket, WebSocketServer } from 'ws';
 import { EventGenerator, EventEmitter } from './event-generator';
 import { ExpectedQueryParams, hasExpectedQueryParams } from './utils';
 
-interface UserLinkMessage { type: 'user/link', payload: { username: string } }
-interface UserUnlinkMessage { type: 'user/unlink' }
-interface UserLeaveMessage { type: 'user/leave' }
-type FromConnectionMessage = UserLinkMessage | UserUnlinkMessage | UserLeaveMessage;
+interface LinkMessage { type: 'krmx/link', payload: { username: string } }
+interface UnlinkMessage { type: 'krmx/unlink' }
+interface LeaveMessage { type: 'krmx/leave' }
+type FromConnectionMessage = LinkMessage | UnlinkMessage | LeaveMessage;
 
-interface UserRejectedMessage { type: 'user/rejected', payload: { reason: string } }
-interface UserAcceptedMessage { type: 'user/accepted' }
-interface UserJoinedMessage { type: 'user/joined', payload: { username: string } }
-interface UserLinkedMessage { type: 'user/linked', payload: { username: string } }
-interface UserUnlinkedMessage { type: 'user/unlinked', payload: { username: string } }
-interface UserLeftMessage { type: 'user/left', payload: { username: string } }
-type FromServerMessage = UserRejectedMessage | UserAcceptedMessage | UserJoinedMessage |
-  UserLinkedMessage | UserUnlinkedMessage | UserLeftMessage;
+interface RejectedMessage { type: 'krmx/rejected', payload: { reason: string } }
+interface AcceptedMessage { type: 'krmx/accepted' }
+interface JoinedMessage { type: 'krmx/joined', payload: { username: string } }
+interface LinkedMessage { type: 'krmx/linked', payload: { username: string } }
+interface UnlinkedMessage { type: 'krmx/unlinked', payload: { username: string } }
+interface LeftMessage { type: 'krmx/left', payload: { username: string } }
+type FromServerMessage = RejectedMessage | AcceptedMessage | JoinedMessage |
+  LinkedMessage | UnlinkedMessage | LeftMessage;
 
 /**
  * The severity of a log message.
@@ -391,7 +391,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       if (connection.username !== undefined) {
         this.unlink(connection.username);
       } else {
-        const userRejectedMessage: UserRejectedMessage = { type: 'user/rejected', payload: { reason: 'invalid message' } };
+        const userRejectedMessage: RejectedMessage = { type: 'krmx/rejected', payload: { reason: 'invalid message' } };
         this.sendTo(connectionId, userRejectedMessage, false);
       }
     }
@@ -401,11 +401,11 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     const reject = (reason: string) => {
       if (rejected) { return; }
       this.logger('debug', `connection ${connectionId} rejected, due to: ${reason}`);
-      const userRejectedMessage: UserRejectedMessage = { type: 'user/rejected', payload: { reason } };
+      const userRejectedMessage: RejectedMessage = { type: 'krmx/rejected', payload: { reason } };
       this.sendTo(connectionId, userRejectedMessage, false);
       rejected = true;
     };
-    if (message.type !== 'user/link') {
+    if (message.type !== 'krmx/link') {
       reject('unlinked connection');
       return;
     }
@@ -432,7 +432,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       return;
     }
     this.logger('debug', `connection ${connectionId} accepted as ${username}`);
-    const userAcceptedMessage: UserAcceptedMessage = { type: 'user/accepted' };
+    const userAcceptedMessage: AcceptedMessage = { type: 'krmx/accepted' };
     this.sendTo(connectionId, userAcceptedMessage, false);
     if (isNewUser) {
       this.join(username);
@@ -441,18 +441,18 @@ class ServerImpl extends EventGenerator<Events> implements Server {
   }
   private onLinkedConnectionMessage(username: string, message: FromConnectionMessage | Message) {
     switch (message.type) {
-    case 'user/link':
-    case 'user/unlink':
+    case 'krmx/link':
+    case 'krmx/unlink':
       this.unlink(username);
       break;
-    case 'user/leave':
+    case 'krmx/leave':
       this.leave(username);
       break;
     default:
-      if (message.type.startsWith('user/')) {
+      if (message.type.startsWith('krmx/')) {
         this.logger('warn', `${username} will be unlinked, because it send a ${message.type} message to the server, `
-          + 'while this is not a known user message that can be sent to the server, keep in mind that user/* messages are reserved for '
-          + 'internal use and should not be used for custom messages');
+          + 'while this is not a known krmx message. Keep in mind that the krmx/ prefix is reserved for internal use and should '
+          + 'not be used for custom messages');
         this.unlink(username);
       } else {
         this.emit('message', username, message);
@@ -533,7 +533,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       throw new Error('cannot join a user with an invalid username');
     }
     this.logger('info', `${username} joined`);
-    const userJoinedMessage: UserJoinedMessage = { type: 'user/joined', payload: { username } };
+    const userJoinedMessage: JoinedMessage = { type: 'krmx/joined', payload: { username } };
     this.broadcast(userJoinedMessage);
     this.users[username] = {};
     this.emit('join', username);
@@ -552,20 +552,20 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     this.users[username].connectionId = connectionId;
     this.connections[connectionId].username = username;
     Object.entries(this.users).forEach(([otherUsername, { connectionId: otherConnectionId }]) => {
-      const joinedMessage: UserJoinedMessage = {
-        type: 'user/joined',
+      const joinedMessage: JoinedMessage = {
+        type: 'krmx/joined',
         payload: { username: otherUsername },
       };
       this.sendTo(connectionId, joinedMessage, false);
       if (otherConnectionId !== undefined) {
-        const linkedMessage: UserLinkedMessage = {
-          type: 'user/linked',
+        const linkedMessage: LinkedMessage = {
+          type: 'krmx/linked',
           payload: { username: otherUsername },
         };
         this.sendTo(connectionId, linkedMessage, false);
       }
     });
-    const userLinkedMessage: UserLinkedMessage = { type: 'user/linked', payload: { username } };
+    const userLinkedMessage: LinkedMessage = { type: 'krmx/linked', payload: { username } };
     this.broadcast(userLinkedMessage, username);
     this.emit('link', username);
   }
@@ -579,7 +579,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       throw new Error('cannot unlink a connection from a user that is not linked');
     }
     this.logger('info', `${username} unlinked`);
-    const userUnlinkedMessage: UserUnlinkedMessage = { type: 'user/unlinked', payload: { username } };
+    const userUnlinkedMessage: UnlinkedMessage = { type: 'krmx/unlinked', payload: { username } };
     this.broadcast(userUnlinkedMessage);
     this.users[username].connectionId = undefined;
     this.connections[connectionId].username = undefined;
@@ -600,7 +600,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       throw new Error('cannot leave a user that does not exist');
     }
     const { connectionId } = this.users[username];
-    const userLeftMessage: UserLeftMessage = { type: 'user/left', payload: { username } };
+    const userLeftMessage: LeftMessage = { type: 'krmx/left', payload: { username } };
     if (connectionId !== undefined) {
       this.unlink(username);
       this.sendTo(connectionId, userLeftMessage, true);

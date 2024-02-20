@@ -1,0 +1,158 @@
+# Protocol
+Krmx is an [event-based](./event-based) protocol. All events are send using the WebSocket protocol and are [JSON](https://www.json.org/json-en.html) formatted.
+
+## Event Format
+All events in Krmx have a basic structure. This basic structure defines a message's `type` and its optional `payload`.
+
+The `type` property should have a string value that tells the application the type of event that it represents. For example: `krmx/link` or `my-application/continued`. It is recommended to use a fixed prefix ending with a `/` in all of your custom events.
+
+The `payload` property is an optional property that can represent data sent along with the event. The payload can be left out or set to any valid JSON value, such as string or a custom object with custom properties.
+
+```json
+{
+  "type": "my-app/some-event",
+  "payload": ... payload here ...
+}
+```
+
+The clients generally use verbs for the `type` property in their messages to the server. The verb indicate the action that client is taking (for example `poker/fold`). The server generally uses the past tense of a verb to indicate the action that has been taken by one of the clients (for example `poker/folded`).
+
+## Internal Messages in Krmx Protocol
+The Krmx protocol uses the above structure for its internal events during communication between clients and the server. All events that Krmx uses internally a represented by a message that uses the `krmx/` prefix.
+
+```json
+{
+  "type": "krmx/*",
+  "payload": ... payload here ...
+}
+```
+
+> Keep in mind that the `krmx/` prefix is reserved for Krmx internal messages.
+
+As part of the Krmx protocol, the clients can send the `krmx/link`, `krmx/unlink`, and `krmx/leave` messages to the server.
+
+As part of the Krmx protocol, the server can send the `krmx/rejected`, `krmx/accepted`, `krmx/joined`, `krmx/linked`, `krmx/unlinked`, and `krmx/left` messages to the clients.
+
+For more information on the meaning behind the different events that these message represent, read the [event-based](./event-based) section.
+
+### Link Message
+The `krmx/link` message is sent from the client to the server when a connection wants to link to a user. The `username` property in the payload indicates to which user the connection wants to link.
+
+```json
+{
+  "type": "krmx/link",
+  "payload": { "username": "<username>" }
+}
+```
+
+> Note: Additional custom properties can be added to the payload of this message for authentication purposes. On the server side, these can be validated in the [authenticate callback](./server). *(TODO: fix link to point to the actual authenticate callback once that documentation has been written.)*
+
+### Rejected Message
+The `krmx/rejected` message is sent from the server to a specific client, whenever that client tried to link to a user incorrectly. For example this can happen if the user that a connection is trying to link to is already linked to another connection. The `reason` property in the payload indicates the reason why the connection could not be linked to the user.
+
+```json
+{
+  "type": "krmx/rejected",
+  "payload": { "reason": "<reason>" }
+}
+```
+
+### Accepted Message
+The `krmx/accepted` message is sent from the server to a specific client, whenever the client successfully linked itself to a user.
+
+```json
+{
+  "type": "krmx/accepted"
+}
+```
+
+### Unlink Message
+The `krmx/unlink` message is sent from the client to the server when a connection wants to unlink from the user it is linked to.
+
+```json
+{
+  "type": "krmx/unlink"
+}
+```
+
+### Leave Message
+The `krmx/leave` message is sent from the client to the server when a connection intends to have the user it is linked to leave the server.
+
+```json
+{
+  "type": "krmx/leave"
+}
+```
+
+### Joined Message
+The `krmx/joined` message is broadcast from the server to all linked connections, whenever a client has joined the server. The `username` property in the payload indicates the name of the user that joined the server.
+
+```json
+{
+  "type": "krmx/joined",
+  "payload": { "username": "<username>" }
+}
+```
+
+### Linked Message
+The `krmx/linked` message is broadcast from the server to all linked connections, whenever a user is newly linked to a connection. The `username` property in the payload indicates the name of the user that the connection was linked to.
+
+```json
+{
+  "type": "krmx/linked",
+  "payload": { "username": "<username>" }
+}
+```
+
+### Unlinked Message
+The `krmx/unlinked` message is broadcast from the server to all linked connections, whenever a user has unlinked from its connection. The `username` property in the payload indicates the name of the user that was unlinked from its connection.
+
+```json
+{
+  "type": "krmx/unlinked",
+  "payload": { "username": "<username>" }
+}
+```
+
+### Left Message
+The `krmx/left` message is broadcast from the server to all linked connections, whenever a user has left the server. The `username` property in the payload indicates the name of the user that left the server.
+
+```json
+{
+  "type": "krmx/left",
+  "payload": { "username": "<username>" }
+}
+```
+
+## Custom Messages
+When working with Krmx you will have to define custom message to send from server to client and from client to server. The payloads of these messages can be of any format, as long as the data can be serialized to a String.
+
+The payload of custom messages is wrapped using the JSON format, similar to that of the Krmx internal messages.
+
+An example custom message without a payload.
+```json
+{
+  "type": "my-game/pass"
+}
+```
+
+An example custom message with a 'string' payload.
+```json
+{
+  "type": "my-game/spawn",
+  "payload": "dragon"
+}
+```
+
+An example custom message with an object payload.
+```json
+{
+  "type": "my-game/sell",
+  "payload": {
+    "item": "apple",
+    "quantity": "3"
+  }
+}
+```
+
+> Keep in mind that the `krmx/` prefix in the `type` property is reserved for Krmx internal messages. You should use your own prefix for your custom messages.

@@ -84,14 +84,14 @@ export function withCustomServer<TScenario>(serverProps: Props, callback: (props
         await new Promise<void>((resolve, reject) => {
           user.on('message', (rawDate) => {
             const message = JSON.parse(rawDate.toString());
-            if (message.type === 'user/accepted') {
+            if (message.type === 'krmx/accepted') {
               resolve();
-            } else if (message.type === 'user/rejected') {
+            } else if (message.type === 'krmx/rejected') {
               reject(message.payload.reason);
             }
           });
           user.on('open', () => {
-            const userLinkMessage = { type: 'user/link', payload: { username } };
+            const userLinkMessage = { type: 'krmx/link', payload: { username } };
             user.send(JSON.stringify(userLinkMessage));
           });
           user.on('close', () => reject('connection closed'));

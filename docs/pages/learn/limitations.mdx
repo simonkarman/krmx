@@ -1,7 +1,39 @@
 # Limitations
-- only TypeScript (NodeJS and React) reference implementations available
-- maintained by one person (Simon Karman)
-- requires a running server, not serverless
-- no websocket over HTTP support
-- no default state management implementation. See [Krmx Best Practices](https://github.com/simonkarman/krmx-best-practices) for an example
-- ...
+While Krmx offers a powerful toolkit for addressing multi-user realtime bi-directional messaging, it's essential to recognize that it is not the right solution for all use cases. Krmx has its own strengths and limitations.
+
+To avoid unsuitable scenarios where Krmx can lead to unnecessary increased complexity of your application, it is important to understand these limitations of Krmx in the context of its architecture, maintenance and features.
+
+## Architecture
+
+### No Support for Serverless
+Deployment of Krmx requires a traditional server setup, as opposed to serverless architectures. Users should ensure that they have appropriate server infrastructure in place to support Krmx-based applications.
+
+### Custom State Management
+Krmx does not include a default state management implementation. However, users can refer to the [Krmx Best Practices](https://github.com/simonkarman/krmx-best-practices) documentation, which offers guidance and examples on effective state management strategies within Krmx-powered applications.
+
+## Maintenance
+
+### Sole Maintainer
+Krmx is currently maintained by a single individual. This means that updates and feature releases may be subject to the availability and priorities of a sole maintainer.
+
+### No Stable Release
+As of now, Krmx has not reached a stable v1.0 release. Users should be aware that while the library is actively developed, changes that introduce breaking modifications or new features may occur until a stable release is reached.
+
+### Limited to NodeJS and React
+While Krmx offers TypeScript implementations tailored for NodeJS and React environments, users seeking support for other programming languages or frameworks may need to implement their own solutions.
+
+### Not Battle-Tested
+Although the Krmx server implementation in TypeScript has 100% unittest coverage, the client does not. Moreover, not all real world scenarios regarding packet loss and connections dropping have been observed and or tested. Using Krmx successfully in your environment may vary depending on individual circumstances.
+
+## Features
+
+### Authentication
+Krmx lacks support for handling authentication of incoming WebSocket connections. Currently, this has to be implemented on top of Krmx by the developer.
+
+### No Transport Mode Fallback
+Krmx lacks built-in fallback mechanisms to alternative transport modes in cases where WebSocket connections are unavailable, either due to browser limitations or network firewalls. This may pose challenges for applications operating in restrictive network environments.
+
+> Tip: Check out [Socket.IO Engine](https://socket.io/docs/v4/engine-io-protocol/) if you're looking for full-duplex and low-overhead communication between a client and a server. It is based on the WebSocket protocol and uses HTTP long-polling as fallback if the WebSocket connection can't be established. Krmx might be rewritten using Socket.IO's engine at some point.
+
+### Missing Liveliness Checks
+Currently, Krmx does not incorporate a ping mechanism to verify the liveliness of connections. While this functionality may be beneficial for certain use cases, it is not (yet) implemented in the library.

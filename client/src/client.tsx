@@ -11,15 +11,16 @@ import React, {
 } from 'react';
 import { produce } from 'immer';
 
+interface RejectedMessage { type: 'krmx/rejected', payload: { reason: string } }
+interface AcceptedMessage { type: 'krmx/accepted' }
+interface JoinedMessage { type: 'krmx/joined', payload: { username: string } }
+interface LinkedMessage { type: 'krmx/linked', payload: { username: string } }
+interface UnlinkedMessage { type: 'krmx/unlinked', payload: { username: string } }
+interface LeftMessage { type: 'krmx/left', payload: { username: string } }
+type FromServerMessage = RejectedMessage | AcceptedMessage | JoinedMessage |
+  LinkedMessage | UnlinkedMessage | LeftMessage;
+
 interface ResetAction { type: 'reset', payload: { username: string } }
-interface UserRejectedMessage { type: 'user/rejected', payload: { reason: string } }
-interface UserAcceptedMessage { type: 'user/accepted' }
-interface UserJoinedMessage { type: 'user/joined', payload: { username: string } }
-interface UserLinkedMessage { type: 'user/linked', payload: { username: string } }
-interface UserUnlinkedMessage { type: 'user/unlinked', payload: { username: string } }
-interface UserLeftMessage { type: 'user/left', payload: { username: string } }
-type FromServerMessage = UserRejectedMessage | UserAcceptedMessage | UserJoinedMessage |
-  UserLinkedMessage | UserUnlinkedMessage | UserLeftMessage;
 type Action = ResetAction | FromServerMessage;
 
 export type KrmxState = {
@@ -42,28 +43,28 @@ const reducer = (_state: KrmxState, action: Action) => {
         isLinked: false,
         users: {},
       };
-    case 'user/accepted':
+    case 'krmx/accepted':
       state.rejectionReason = undefined;
       break;
-    case 'user/rejected':
+    case 'krmx/rejected':
       state.rejectionReason = action.payload.reason;
       break;
-    case 'user/joined':
+    case 'krmx/joined':
       state.users[action.payload.username] = ({ isLinked: false });
       break;
-    case 'user/linked':
+    case 'krmx/linked':
       if (state.username === action.payload.username) {
         state.isLinked = true;
       }
       state.users[action.payload.username].isLinked = true;
       break;
-    case 'user/unlinked':
+    case 'krmx/unlinked':
       if (state.username === action.payload.username) {
         state.isLinked = false;
       }
       state.users[action.payload.username].isLinked = false;
       break;
-    case 'user/left':
+    case 'krmx/left':
       delete state.users[action.payload.username];
       break;
     default:
@@ -115,17 +116,17 @@ export const KrmxProvider: FC<PropsWithChildren<{
   const link = useCallback((username: string) => {
     if (status !== 'open') { return; }
     dispatch({ type: 'reset', payload: { username } });
-    send({ type: 'user/link', payload: { username } });
+    send({ type: 'krmx/link', payload: { username } });
   }, [status, send]);
 
   const unlink = useCallback(() => {
     if (status !== 'open') { return; }
-    send({ type: 'user/unlink' });
+    send({ type: 'krmx/unlink' });
   }, [status, send]);
 
   const leave = useCallback(() => {
     if (status !== 'open') { return; }
-    send({ type: 'user/leave' });
+    send({ type: 'krmx/leave' });
   }, [status, send]);
 
   useEffect(() => {
@@ -155,7 +156,7 @@ export const KrmxProvider: FC<PropsWithChildren<{
       if (ws.current == socket) {
         const message: unknown = JSON.parse(rawMessage.data.toString());
         if (typeof message === 'object' && message !== null && message && 'type' in message && typeof message.type === 'string') {
-          if (message.type.startsWith('user/')) {
+          if (message.type.startsWith('krmx/')) {
             dispatch(message as FromServerMessage);
           } else {
             props.onMessage(message as { type: string });
