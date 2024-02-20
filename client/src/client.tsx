@@ -78,7 +78,7 @@ type MessageConsumer = <TMessage extends { type: string }>(message: TMessage) =>
 type KrmxContextProps = {
   isConnected: boolean,
   reconnect: (force?: boolean) => void,
-  link: (username: string) => void,
+  link: (username: string, auth?: string) => void,
   send: MessageConsumer,
   unlink: () => void,
   leave: () => void,
