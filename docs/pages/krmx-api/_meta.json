@@ -1,5 +1,5 @@
 {
-  "index": "API Introduction",
-  "nodejs-server": "NodeJS Server",
-  "react-client": "React Client"
+  "index": "Introduction",
+  "server": "NodeJS Server API",
+  "client": "React Client API"
 }

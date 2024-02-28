@@ -1,0 +1,122 @@
+# NodeJS Server API
+The Krmx server implementation is a NodeJS backend server and is written in TypeScript.
+
+> Take a look at the [TypeScript SDK reference](/sdk/modules/Krmx_Server.html) and [source code](https://github.com/simonkarman/krmx/blob/main/server/src/server.ts) to learn more about the Server API.
+
+If you need help setting up a project with Krmx, then please following the instructions at [Getting Started](getting-started).
+
+## Creating a Server
+A Krmx server can be created using the `createServer` method.
+
+```ts
+import { createServer, Props } from '@krmx/server';
+
+const props: Props = { /* configure here */ }
+const server = createServer(props);
+```
+
+### Props
+When creating a server, [configuration properties](/sdk/interfaces/Krmx_Server.Props.html) can be passed to configure it. The exported [Props](/sdk/interfaces/Krmx_Server.Props.html) interface describes these properties.
+
+> The Krmx server doesn't start listening for incoming connections until `server.listen(<port-number>)` is invoked.
+
+### Lifetime
+During the server lifetime, the server status can be used to identify the current state us of the server.
+
+```ts
+import { Server, Status } from '@krmx/server';
+declare const server: Server;
+
+const status: Status = server.getStatus();
+```
+
+The different status are described by the [Status](/sdk/types/Krmx_Server.Status.html) type. The server can change status by using the `listen` and `close` methods on the server.
+
+```ts
+import { Server } from '@krmx/server';
+declare const server: Server;
+
+// start listening
+const PORT = 8082
+server.listen(PORT);
+
+// close the server
+server.close();
+```
+
+### User Management
+You can join, kick, or unlink specific users.
+
+```ts
+import { Server, User } from '@krmx/server';
+declare const server: Server;
+
+// get all users
+const users: User[] = server.getUsers();
+console.info(users); // [{ username: 'simon', isLinked: true }, ... ]
+
+// join, kick, or unlink a specific user
+const username = 'simon';
+server.join(username);
+server.kick(username);
+server.unlink(username);
+```
+
+See the [Server](/sdk/interfaces/Krmx_Server.Server.html) interface for more information about these methods.
+
+### Send/Broadcast Messages
+Once a server is running, you can broadcast or send messages.
+
+```ts
+import { Server } from '@krmx/server';
+declare const server: Server;
+
+// broadcast a message to all linked users
+const message = { type: 'my/custom', payload: 3 };
+server.broadcast(message);
+
+// send a message to a specific user
+const username = 'simon';
+server.send(username, message);
+```
+
+See the [Server](/sdk/interfaces/Krmx_Server.Server.html) interface for more information about these methods.
+
+## Events
+You can listen to events, such as joining of new users, using an event listener. To do this you can use the server's ` on(eventName, listener): void;` method.
+
+### Krmx Events
+Krmx emits events whenever: a user joins, a connection links to a user, a connection unlinks from a user, a user leaves, and more.
+
+```ts
+import { Server } from '@krmx/server';
+declare const server: Server;
+
+// example of listening to the 'link' event with an event listener
+server.on('link', (username) => {
+  console.info('A connection was linked to ', username);
+});
+```
+
+You can find the explanation of each event type in [the event-based documentation](/learn/event-based#events) and in the [TypeScript SDK reference](/sdk/types/Krmx_Server.Events.html).
+
+### Messages (from clients)
+When clients send messages, these will be emitted as a `message` event. You can listen to these message using the server's `on('message', <listener>)` method.
+
+```ts
+import { Server } from '@krmx/server';
+declare const server: Server;
+
+server.on('message', (username, message) => {
+  console.info(username, 'sent:', message);
+});
+```
+
+## Advanced Events Usage
+
+> Coming soon!
+>
+> - Pipe `pipe<NextEventMap>(configureTap): EventEmitter<NextEventMap>;`
+> - Events TypeScript Type
+
+Take a look at the [TypeScript SDK reference](/sdk/modules/Krmx_Server.html) and [source code](https://github.com/simonkarman/krmx/blob/main/server/src/server.ts) to learn more about the Server API.

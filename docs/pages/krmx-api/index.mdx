@@ -1,12 +1,24 @@
-# Introduction
-Krmx provides two reference implementations of its protocol. One for a server and one for a client. Both have been written in TypeScript. The server implementation for a NodeJS backend server and the client implementation for a React frontend.
+# Krmx API
+Krmx provides an implementations of its client and server protocol, both written in TypeScript. The server implementation can be used in a NodeJS backend and the client implementation can be used in a React frontend.
 
-You can also use [the TypeScript SDK reference](/sdk/index.html) generated from the Krmx source code.
+> If you're looking for the SDK reference, you can use the [TypeScript SDK reference](/sdk/index.html) generated from the Krmx source code.
 
-## Server
+If you decide to build your own Krmx implementation of a server or client in a different language or framework, then feel free to add that implementation by [opening a pull request](https://github.com/simonkarman/krmx).
 
+## NodeJS Server API
+The Krmx server implementation is a NodeJS backend server and is written in TypeScript. You can use the [API documentation](krmx-api/server), [TypeScript SDK reference](/sdk/modules/Krmx_Server.html), or [source code](https://github.com/simonkarman/krmx/blob/main/server/src/server.ts) to learn more about the Server API.
 
-## Client
+- [Creating a new Krmx Server](krmx-api/server#creating-a-server)
+- [Listening to events](krmx-api/server#events)
+- [More...](krmx-api/server)
 
-## Other implementations
-If you decide to build your own Krmx compatible implementation of a server or client, then feel free to add that as a reference implementation to this repository by [opening a pull request](https://github.com/simonkarman/krmx).
+If you need help setting up a project with Krmx, then please following the instructions at [Getting Started](getting-started).
+
+## React Client API
+The Krmx client implementation is a React context provider with a React hook and is written in TypeScript. You can use the [API documentation](krmx-api/client), [TypeScript SDK reference](/sdk/modules/Krmx_Client.html), or [source code](https://github.com/simonkarman/krmx/blob/main/client/src/client.tsx) to learn more about the Server API.
+
+- [Krmx Context](krmx-api/client#krmx-context)
+- [Krmx Hook](krmx-api/client#krmx-hook)
+- [More...](krmx-api/client)
+
+If you need help setting up a project with Krmx, then please following the instructions at [Getting Started](getting-started).
