@@ -1,0 +1,7 @@
+{
+  "name": "Krmx TypeScript SDK",
+  "entryPoints": ["../server", "../client"],
+  "entryPointStrategy": "packages",
+  "out": "./public/sdk",
+  "cleanOutputDir": true
+}

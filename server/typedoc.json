@@ -1,0 +1,5 @@
+{
+  "name": "Krmx Server",
+  "includeVersion": true,
+  "entryPoints": ["./src/index.ts"]
+}
