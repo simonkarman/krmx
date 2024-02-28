@@ -2,6 +2,5 @@
   "index": "Introduction",
   "getting-started": "Getting Started",
   "learn": "Learn Krmx",
-  "server": "Server API Docs",
-  "clients": "Client API Docs"
+  "krmx-api": "Krmx API"
 }

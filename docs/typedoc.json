@@ -1,7 +1,9 @@
 {
-  "name": "Krmx TypeScript SDK",
+  "name": "Krmx - TypeScript SDK - Reference",
   "entryPoints": ["../server", "../client"],
   "entryPointStrategy": "packages",
   "out": "./public/sdk",
-  "cleanOutputDir": true
+  "cleanOutputDir": true,
+  "readme": "sdk.md",
+  "hideGenerator": true
 }
