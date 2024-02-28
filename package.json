@@ -1,6 +1,6 @@
 {
   "name": "krmx",
-  "version": "0.2.2",
+  "version": "0.4.0",
   "description": "Krmx is a network protocol for realtime multi-user interactions",
   "scripts": {
     "install-all": "npm install && npm --prefix server install && npm --prefix client install && npm --prefix docs install",
