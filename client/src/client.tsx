@@ -62,6 +62,7 @@ const reducer = (_state: KrmxState, action: Action) => {
     case 'krmx/unlinked':
       if (state.username === action.payload.username) {
         state.isLinked = false;
+        // TODO: this should reset the state
       }
       state.users[action.payload.username].isLinked = false;
       break;

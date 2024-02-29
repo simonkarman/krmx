@@ -1,20 +1,135 @@
 # React Client API
-The Krmx client implementation is a React context and hook and is written in TypeScript.
+The Krmx client implementation is written in TypeScript and provides a React provider and hook. The provider and hook together from a [React Context](https://react.dev/learn/passing-data-deeply-with-context).
+
+Context lets the parent component make some information available to any component in the tree below it—no matter how deep—without passing it explicitly through props. In the case of the Krmx client the provider is where the websocket connection to the Krmx server is made and it makes the information from the Krmx protocol, such as unlinked and linked users, available to it's child components.
 
 > Take a look at the [TypeScript SDK reference](/sdk/modules/Krmx_Client.html) and [source code](https://github.com/simonkarman/krmx/blob/main/client/src/client.tsx) to learn more about the Client API.
 
 If you need help setting up a project with Krmx, then please following the instructions at [Getting Started](/getting-started).
 
-## Krmx Context
-> Coming soon!
->
-> - Input explained
-> - Example with handling incoming messages
+## Krmx Provider
+The client API provides a `KrmxProvider` that you can wrap around your components. The child components will be able to use the Krmx context. The provider is where the websocket connection to the Krmx server is made and it makes the information from the Krmx protocol, such as unlinked and linked users, available to it's child components.
+
+### Creating the Provider
+Wrap your components into the KrmxProvider.
+
+```tsx
+"use client";
+import { useState } from 'react';
+import { KrmxProvider } from '@krmx/client';
+
+export default function MyApp() {
+  const [serverUrl] = useState('ws://localhost:8082');
+  return (
+    <KrmxProvider
+      serverUrl={serverUrl}
+      onMessage={(message) => console.info(message)}
+    >
+      <MyComponent/>
+    </KrmxProvider>
+  );
+}
+```
+
+### Properties
+To create the provider you have to supply two properties: `serverUrl` and `onMessage`.
+
+#### Server Url
+For the `serverUrl` property you have to provide the `ws://` or `wss://` url of the websocket endpoint where your Krmx server is running.
+
+For example: `ws://my-subdomain.example.org:3002/my-game` or `ws://localhost:1234`.
+
+#### On Message
+For the `onMessage` property you have to pass an event handler. This event handler will be invoked every time that the Krmx server sends a message to this client.
+
+> Keep in mind that messages internal to Krmx, such as 'krmx/join' or 'krmx/leave' messages, are **NOT** emitted to this event handler. To use the Krmx internal user information, you can use the `useKrmx` hook that is explained below.
 
 ## Krmx Hook
-> Coming soon!
->
-> - React hook props explained
-> - React hook methods explained
+The provider makes the information from the Krmx protocol, such as unlinked and linked users, available to it's child components. To access this information you can use [the `useKrmx()` hook](/sdk/functions/Krmx_Client.useKrmx.html).
 
+```tsx
+function MyComponent() {
+  const { isConnected, reconnect, isLinked, link, rejectionReason, send, leave, unlink, users } = useKrmx();
+}
+```
+
+### Fields
+The hook returns an object with many fields, that expose part of this information.
+
+### Is Connected
+The `isConnected` field of type boolean, indicates whether the Krmx client could successfully setup a websocket to the server.
+
+> Keep in mind that being connected to the server does not mean that the connection is linked to a user.
+
+### Reconnect
+The `reconnect` field is a method that can be used to retry setting up a websocket connection to the Krmx server.
+
+The method takes an optional force boolean as its first argument. When invoked without any arguments, the `reconnect()` will only be attempted if not already connected to the server. If the force argument is set to `true` and the client is already connected to the Krmx server, that connection will be initially dropped.
+
+### Is Linked
+The `isLinked` field of type boolean, indicates whether the websocket connection the client has to the server has been successfully linked to a user. If `isLinked` is false, you can use the `link` method to link the connection of this client to a user.
+
+### Link
+The `link` field is a method that can be used to link the connection to a user.
+
+The method require the first argument to be set to the username. For example: `link('simon')`.
+
+The method optionally takes a second argument with the authentication of your application as a string. This token is send to the server and will be available in the `on('authenticate', ...)` listener under the `info.auth` field.
+
+### Rejection Reason
+The `rejectionReason` field of type string is set to `undefined`, or to a string value that represents the latest reason why linking the connection to a user was not successful. Some examples: `'user is already linked to a connection'` or `'server is full'`.
+
+### Send
+The `send` field is a method that can be used to send message to the server.
+
+```tsx
+function SendDrawMessageComponent() {
+  const { isLinked, send } = useKrmx();
+  if (isLinked) {
+    return <button onClick={() => { send({ type: 'game/draw', payload: 2 }); }}>
+        Draw 2 cards!
+    </button>;
+  }
+}
+```
+
+### Leave
+The `leave` field is a method that can be used to have user leave the server.
+
+### Unlink
+The `unlink` field is a method that can be used to have the connection unlink from the server. This will ensure that the connection to the server stays intact and can be used to link to a user again.
+
+### Users
+The `users` field is an object, that indicates the users that are known to the servers and provides information about which are currently linked to a connection.
+
+The object has the following Type Definition `{ [username: string]: { isLinked: boolean}};`. Example of its structure
+
+```json
+{
+    "simon": { "isLinked": true },
+    "lisa": { "isLinked": true },
+    "rik": { "isLinked": false },
+}
+```
+
+Example usage.
+
+```tsx
+function UsersComponent() {
+  const { isLinked, users } = useKrmx();
+  if (isLinked) {
+    return <ul>
+       {Object.entries(users)
+         .map(([username, { isLinked }]) => (
+           <li key={username}>
+             {username}
+             {!isLinked && ' (disconnected)'}
+           </li>)
+         )}
+     </ul>;
+  }
+}
+```
+
+## TypeScript SDK Reference
 Take a look at the [TypeScript SDK reference](/sdk/modules/Krmx_Client.html) and [source code](https://github.com/simonkarman/krmx/blob/main/client/src/client.tsx) to learn more about the Client API.
