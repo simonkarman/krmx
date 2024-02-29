@@ -19,10 +19,10 @@ Krmx lets you build **interactions**. As the application designer you extend the
 import { Card, Cards } from 'nextra/components';
 
 <Cards num={2}>
-  <Card title="Getting Started" href="getting-started" />
-  <Card title="Learn Krmx" href="learn" />
-  <Card title="Krmx Server" href="server" />
-  <Card title="Krmx Clients" href="clients" />
+  <Card title="Getting Started" href="/getting-started" />
+  <Card title="Learn Krmx" href="/learn" />
+  <Card title="Krmx API" href="/krmx-api" />
+  <Card title="TypeScript SDK reference" href="/sdk/index.html" />
 </Cards>
 
 ---
@@ -48,7 +48,7 @@ export function FAQBox({ title, children }) {
   Krmx is the right solution if you're building a (web) application that is designed for users to interact with each other in realtime during a session. A great example of this is multiplayer (board)games, which is the use case around which Krmx was initially designed.
 </FAQBox>
 <FAQBox title="Where can I find examples?">
-  When learning Krmx, it can help to take a look at some example projects. You can find examples in [reference implementations](getting-started/references).
+  When learning Krmx, it can help to take a look at some example projects. You can find examples in [reference implementations](/getting-started/references).
 </FAQBox>
 <FAQBox title="Why are the Krmx reference implementations written in TypeScript?">
   Krmx provides two reference implementations of its protocol. One for a server and one for a client. As the Krmx protocol is language agnostic, the reference implementations of the Krmx protocol could have been written in any language. So, why TypeScript?

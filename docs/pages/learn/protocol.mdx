@@ -1,5 +1,5 @@
 # Protocol
-Krmx is an [event-based](./event-based) protocol. All events are send using the WebSocket protocol and are [JSON](https://www.json.org/json-en.html) formatted.
+Krmx is an [event-based](/learn/event-based) protocol. All events are send using the WebSocket protocol and are [JSON](https://www.json.org/json-en.html) formatted.
 
 ## Event Format
 All events in Krmx have a basic structure. This basic structure defines a message's `type` and its optional `payload`.
@@ -33,7 +33,7 @@ As part of the Krmx protocol, the clients can send the `krmx/link`, `krmx/unlink
 
 As part of the Krmx protocol, the server can send the `krmx/rejected`, `krmx/accepted`, `krmx/joined`, `krmx/linked`, `krmx/unlinked`, and `krmx/left` messages to the clients.
 
-For more information on the meaning behind the different events that these message represent, read the [event-based](./event-based) section.
+For more information on the meaning behind the different events that these message represent, read the [event-based](/learn/event-based) section.
 
 ### Link Message
 The `krmx/link` message is sent from the client to the server when a connection wants to link to a user. The `username` property in the payload indicates to which user the connection wants to link. The `version` property in the payload should be set to the version of the krmx protocol is used. The `auth` property can optionally be set to a string value (for example a JWT token), which can be used on the server side to validate authentication.
@@ -45,7 +45,7 @@ The `krmx/link` message is sent from the client to the server when a connection 
 }
 ```
 
-> Note: Custom authentication behaviour can added to the server side by using the [authenticate callback](./server). This can be used to enforce a limit of users or use custom logic to validate the provided authentication string. *(TODO: fix link to point to the actual authenticate callback once that documentation has been written.)*
+> Note: Custom authentication behaviour can added to the server side by using the [authenticate callback](/krmx-api/server). This can be used to enforce a limit of users or use custom logic to validate the provided authentication string. *(TODO: fix link to point to the actual authenticate callback once that documentation has been written.)*
 
 ### Rejected Message
 The `krmx/rejected` message is sent from the server to a specific client, whenever that client tried to link to a user incorrectly. For example this can happen if the user that a connection is trying to link to is already linked to another connection. The `reason` property in the payload indicates the reason why the connection could not be linked to the user.

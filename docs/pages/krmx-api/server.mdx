@@ -3,7 +3,7 @@ The Krmx server implementation is a NodeJS backend server and is written in Type
 
 > Take a look at the [TypeScript SDK reference](/sdk/modules/Krmx_Server.html) and [source code](https://github.com/simonkarman/krmx/blob/main/server/src/server.ts) to learn more about the Server API.
 
-If you need help setting up a project with Krmx, then please following the instructions at [Getting Started](getting-started).
+If you need help setting up a project with Krmx, then please following the instructions at [Getting Started](/getting-started).
 
 ## Creating a Server
 A Krmx server can be created using the `createServer` method.
@@ -63,6 +63,29 @@ server.unlink(username);
 ```
 
 See the [Server](/sdk/interfaces/Krmx_Server.Server.html) interface for more information about these methods.
+
+### User Authentication
+Right before a user joins the server, the server emits an authenticate event with some information about the user. Within the a listener to this event you have the ability to reject the user.
+
+```ts
+import { Server } from '@krmx/server';
+declare const server: Server;
+
+server.on('authenticate', (username, info, reject) => {
+    // example: don't let a new user join if the server is full
+    if (info.isNewUser && server.getUsers().length >= 10) {
+        reject('server is full');
+    }
+
+    // example: validate authentication where checkValidAuth is your custom code that
+    //          validate the authentication provided by the client
+    if (info.auth === undefined || !checkValidAuth(username, info.auth)) {
+        reject('authentication failed');
+    }
+});
+```
+
+See the server [Events](/sdk/types/Krmx_Server.Events.html) type for more information about the authenticate event.
 
 ### Send/Broadcast Messages
 Once a server is running, you can broadcast or send messages.
