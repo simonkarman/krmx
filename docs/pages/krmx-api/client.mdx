@@ -56,30 +56,30 @@ function MyComponent() {
 ### Fields
 The hook returns an object with many fields, that expose part of this information.
 
-### Is Connected
+#### Is Connected
 The `isConnected` field of type boolean, indicates whether the Krmx client could successfully setup a websocket to the server.
 
 > Keep in mind that being connected to the server does not mean that the connection is linked to a user.
 
-### Reconnect
+#### Reconnect
 The `reconnect` field is a method that can be used to retry setting up a websocket connection to the Krmx server.
 
 The method takes an optional force boolean as its first argument. When invoked without any arguments, the `reconnect()` will only be attempted if not already connected to the server. If the force argument is set to `true` and the client is already connected to the Krmx server, that connection will be initially dropped.
 
-### Is Linked
+#### Is Linked
 The `isLinked` field of type boolean, indicates whether the websocket connection the client has to the server has been successfully linked to a user. If `isLinked` is false, you can use the `link` method to link the connection of this client to a user.
 
-### Link
+#### Link
 The `link` field is a method that can be used to link the connection to a user.
 
 The method require the first argument to be set to the username. For example: `link('simon')`.
 
 The method optionally takes a second argument with the authentication of your application as a string. This token is send to the server and will be available in the `on('authenticate', ...)` listener under the `info.auth` field.
 
-### Rejection Reason
+#### Rejection Reason
 The `rejectionReason` field of type string is set to `undefined`, or to a string value that represents the latest reason why linking the connection to a user was not successful. Some examples: `'user is already linked to a connection'` or `'server is full'`.
 
-### Send
+#### Send
 The `send` field is a method that can be used to send message to the server.
 
 ```tsx
@@ -93,13 +93,13 @@ function SendDrawMessageComponent() {
 }
 ```
 
-### Leave
+#### Leave
 The `leave` field is a method that can be used to have user leave the server.
 
-### Unlink
+#### Unlink
 The `unlink` field is a method that can be used to have the connection unlink from the server. This will ensure that the connection to the server stays intact and can be used to link to a user again.
 
-### Users
+#### Users
 The `users` field is an object, that indicates the users that are known to the servers and provides information about which are currently linked to a connection.
 
 The object has the following Type Definition `{ [username: string]: { isLinked: boolean}};`. Example of its structure
@@ -112,7 +112,7 @@ The object has the following Type Definition `{ [username: string]: { isLinked: 
 }
 ```
 
-Example usage.
+Example usage of the users field.
 
 ```tsx
 function UsersComponent() {
