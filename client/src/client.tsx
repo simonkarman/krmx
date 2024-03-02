@@ -96,7 +96,7 @@ const KrmxContext = createContext<KrmxContextProps>({
   unlink: () => {},
   leave: () => {},
 });
-export const useKrmx = function () {
+export const useKrmx = function (): KrmxContextProps {
   return useContext(KrmxContext);
 };
 
