@@ -75,16 +75,14 @@ Then, you can create a simple React component that serves as a client using the 
   export default function MyApplication() {
     const [serverUrl] = useState('ws://localhost:8082');
     return (
-      <KrmxProvider
-        serverUrl={serverUrl}
-        onMessage={(message) => console.info(message)}
-      >
+      <KrmxProvider serverUrl={serverUrl} >
         <MyComponent/>
       </KrmxProvider>
     );
   }
   function MyComponent() {
-    const { isConnected, isLinked, link, rejectionReason, send, leave, users } = useKrmx();
+    const { isConnected, isLinked, link, rejectionReason, send, leave, users, useMessages } = useKrmx();
+    useMessages((message) => console.info(message);
     if (!isConnected) {
       // Your logic for when you're not connected to the server goes here
       return <p>No connection to the server...</p>;

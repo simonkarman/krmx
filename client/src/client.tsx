@@ -37,13 +37,14 @@ const initialState: KrmxState = {
 };
 const reducer = (_state: KrmxState, action: Action) => {
   return produce<KrmxState, KrmxState>(_state, state => {
+    const getResetState = (username: string) => ({
+      username,
+      isLinked: false,
+      users: {},
+    });
     switch (action.type) {
     case 'reset':
-      return {
-        username: action.payload.username,
-        isLinked: false,
-        users: {},
-      };
+      return getResetState(action.payload.username);
     case 'krmx/accepted':
       state.rejectionReason = undefined;
       break;
@@ -61,8 +62,7 @@ const reducer = (_state: KrmxState, action: Action) => {
       break;
     case 'krmx/unlinked':
       if (state.username === action.payload.username) {
-        state.isLinked = false;
-        // TODO: this should reset the state
+        return getResetState(action.payload.username);
       }
       state.users[action.payload.username].isLinked = false;
       break;
@@ -83,6 +83,7 @@ type KrmxContextProps = {
   send: MessageConsumer,
   unlink: () => void,
   leave: () => void,
+  useMessages: (messageConsumer: MessageConsumer, deps: React.DependencyList) => void,
 } & KrmxState;
 const KrmxContext = createContext<KrmxContextProps>({
   isConnected: false,
@@ -95,6 +96,7 @@ const KrmxContext = createContext<KrmxContextProps>({
   send: () => {},
   unlink: () => {},
   leave: () => {},
+  useMessages: () => {},
 });
 export const useKrmx = function (): KrmxContextProps {
   return useContext(KrmxContext);
@@ -102,13 +104,28 @@ export const useKrmx = function (): KrmxContextProps {
 
 export const KrmxProvider: FC<PropsWithChildren<{
   serverUrl: string,
-  onMessage: MessageConsumer,
 }>> = (props) => {
   const ws = useRef(null as unknown as WebSocket);
+  const subscriptions = useRef<{ [subscriptionId: string]: MessageConsumer }>({});
+
   const [connectionAttempt, setConnectionAttempt] = useState(0);
   const [status, setStatus] = useState<'waiting' | 'open' | 'closed'>('waiting');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [state, dispatch] = useReducer(reducer, initialState as unknown as any);
+
+  const useMessages = (messageConsumer: MessageConsumer, deps: React.DependencyList) => {
+    if (deps === undefined || deps.length !== 0) {
+      throw new Error('useMessages must be used with an empty dependency list (aka \'[]\'), consult the Krmx documentation for more information');
+    }
+    const onMessage = useCallback(messageConsumer, deps);
+    useEffect(() => {
+      const subscriptionId = crypto.randomUUID();
+      subscriptions.current[subscriptionId] = onMessage;
+      return () => {
+        delete subscriptions.current[subscriptionId];
+      };
+    }, [onMessage, ws]);
+  };
 
   const send: MessageConsumer = useCallback((message) => {
     if (status !== 'open') { return; }
@@ -161,7 +178,13 @@ export const KrmxProvider: FC<PropsWithChildren<{
           if (message.type.startsWith('krmx/')) {
             dispatch(message as FromServerMessage);
           } else {
-            props.onMessage(message as { type: string });
+            for (const [id, messageConsumer] of Object.entries(subscriptions.current)) {
+              try {
+                messageConsumer(message as { type: string });
+              } catch (e) {
+                console.error(`useKrmx/useMessages invocation (${id}) failed`, e);
+              }
+            }
           }
         }
       }
@@ -189,6 +212,7 @@ export const KrmxProvider: FC<PropsWithChildren<{
     send,
     unlink,
     leave,
+    useMessages,
   }}>
     {props.children}
   </KrmxContext.Provider>;

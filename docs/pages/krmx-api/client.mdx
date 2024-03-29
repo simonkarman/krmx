@@ -21,10 +21,7 @@ import { KrmxProvider } from '@krmx/client';
 export default function MyApp() {
   const [serverUrl] = useState('ws://localhost:8082');
   return (
-    <KrmxProvider
-      serverUrl={serverUrl}
-      onMessage={(message) => console.info(message)}
-    >
+    <KrmxProvider serverUrl={serverUrl} >
       <MyComponent/>
     </KrmxProvider>
   );
@@ -32,17 +29,12 @@ export default function MyApp() {
 ```
 
 ### Properties
-To create the provider you have to supply two properties: `serverUrl` and `onMessage`.
+To create the provider you have to supply one property: the `serverUrl`.
 
 #### Server Url
 For the `serverUrl` property you have to provide the `ws://` or `wss://` url of the websocket endpoint where your Krmx server is running.
 
 For example: `ws://my-subdomain.example.org:3002/my-game` or `ws://localhost:1234`.
-
-#### On Message
-For the `onMessage` property you have to pass an event handler. This event handler will be invoked every time that the Krmx server sends a message to this client.
-
-> Keep in mind that messages internal to Krmx, such as 'krmx/join' or 'krmx/leave' messages, are **NOT** emitted to this event handler. To use the Krmx internal user information, you can use the `useKrmx` hook that is explained below.
 
 ## Krmx Hook
 The provider makes the information from the Krmx protocol, such as unlinked and linked users, available to it's child components. To access this information you can use [the `useKrmx()` hook](/sdk/functions/Krmx_Client.useKrmx.html).
@@ -68,6 +60,18 @@ The method takes an optional force boolean as its first argument. When invoked w
 
 #### Is Linked
 The `isLinked` field of type boolean, indicates whether the websocket connection the client has to the server has been successfully linked to a user. If `isLinked` is false, you can use the `link` method to link the connection of this client to a user.
+
+```tsx
+function MyComponent() {
+  const { isLinked, username } = useKrmx();
+
+  if (isLinked) {
+    return <p>Welcome, {username} 👋</p>;
+  } else {
+    return <p>You're not linked!</p>;
+  }
+}
+```
 
 #### Link
 The `link` field is a method that can be used to link the connection to a user.
@@ -127,6 +131,115 @@ function UsersComponent() {
            </li>)
          )}
      </ul>;
+  }
+}
+```
+
+#### Use Messages
+The `useMessages` field is a method that let's a component subscribe to incoming events from the Krmx server.
+
+As the first argument to this method, you pass an event handler. This event handler will be invoked every time that the Krmx server sends a message to this client. The event handler is invoked with the message as the first parameter.
+
+As the second argument to `useMessages` you'll have to provide the reactive dependency array.
+
+```tsx
+function MyFirstComponentThatUsesMessages() {
+  const { useMessages } = useKrmx();
+  useMessages((message: { type: string }) => {
+    console.info('received', message)
+  }, []);
+}
+```
+
+> Keep in mind that messages internal to Krmx, such as 'krmx/join' or 'krmx/leave' messages, are **NOT** emitted to this event handler. To use the Krmx internal user information, you can use the other properties of the `useKrmx` hook.
+
+##### Reactive values in `useMessages` event handler
+To avoid errors, you have to pass an empty dependency array (aka `[]`). See the example below for the explanation of why you have to pass an empty dependency array.
+
+```tsx
+function MyCountComponent() {
+  const { useMessages } = useKrmx();
+  const [first, setFirst] = useState(-1);
+  const [receivedCounters, setReceivedCounters] = useState<number[]>([]);
+  const messagesRef = useRef<number[]>([]);
+
+  // ...
+
+  useMessages((message: { type: string, payload?: number }) => {
+    if (message.type === 'count') {
+
+      // ❌ incorrect (setting reactive values directly)
+      // Due to the nature of websockets, messages might come in while React is (already) re-rendering,
+      //   these messages could then be sent to the out-of-date useMessages callback, which means that
+      //   the reactive values inside that callback might still be pointing to 'old' values. To avoid
+      //   such tricky situations, the callback is enforced to have zero dependencies.
+      setReceivedCounters([...receivedCounters, message.payload || -1].slice(-10));
+
+      // ✅ correct (using setters)
+      // If you want to change reactive values, you should use the setters of React state with a
+      //   function, These function will have access to the latest reactive value.
+      setFirst((first) => first === -1 ? (message.payload || 0) : first);
+      setReceivedCounters((receivedCounters) => [...receivedCounters, message.payload || -1].slice(-10));
+
+      // ❌ incorrect (accessing reactive values)
+      // As the useMessages callback has an empty list of dependencies, it is only created once, during
+      //   the initial render of the component. Inherently, this means that you should not directly
+      //   access reactive values, as these will always have their initial value set.
+      if (first !== -1) {
+        console.info('this is never reached!');
+      }
+
+      // ✅ correct (using a ref)
+      // Using a ref and mutating that directly from the useMessages callback is fine as refs in React
+      //   don't interact with rendering. In this case, setting reactive values directly based on the
+      //   ref is fine, as the ref ensures that messages are not lost.
+      messagesRef.current.push(message.payload || 0);
+      setFirst(messagesRef.current[0]);
+      setReceivedCounters(messagesRef.current.slice(-10));
+    }
+  },
+   /* Usage of an empty dependency array is enforced here,
+      passing any other value will throw an error */ []);
+
+  // ...
+
+  return <div>
+    <h2>Last 10 Messages (started at {first})</h2>
+    <ul>
+      {receivedCounters.map((count, index) =>
+        <li key={index}>
+          {count}
+        </li>
+      )}
+    </ul>
+  </div>
+}
+```
+
+##### `useMessages` after unlinking
+When your component is using `useMessages`, ensure that after the Krmx client has re-linked, that the component will reset its state appropriately. For example, the following component keeps track of the number of messages received and properly sets it to 0 any time the Krmx client is unlinked.
+
+```tsx
+function MyComponentThatProperlyCleansUp() {
+  const { isLinked, useMessages } = useKrmx();
+  const [ numberOfMessagesReceived, setNumberOfMessagesReceived ] = useState<number>([]);
+
+  // Keep track of the number of messages received
+  useMessages((message) => {
+    setNumberOfMessagesReceived(numberOfMessagesReceived => numberOfMessagesReceived + 1);
+  }, []);
+
+  // Properly set the number of messages received to 0, any time the Krmx client is unlinked
+  useEffect(() => {
+    if (!isLinked) {
+      setNumberOfMessagesReceived(0);
+    }
+  }, [isLinked]);
+
+  if (isLinked) {
+    return <p>Messages received: {numberOfMessagesReceived}</p>;
+  } else {
+    return <p>Not linked.</p>;
   }
 }
 ```

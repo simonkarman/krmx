@@ -1,14 +1,12 @@
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useState } from 'react';
 import { create } from 'react-test-renderer';
 import { KrmxProvider, useKrmx } from '../src';
 
 global['WebSocket'] = require('ws');
+global['crypto'] = require('crypto');
 
 function MyApp(props: { serverUrl: string }): ReactElement {
-  return <KrmxProvider
-    serverUrl={props.serverUrl}
-    onMessage={(message) => console.info(message)}
-  >
+  return <KrmxProvider serverUrl={props.serverUrl}>
     <MyComponent/>
   </KrmxProvider>;
 }
@@ -18,7 +16,13 @@ function MyComponent() {
     isConnected, reconnect,
     username, isLinked, link, rejectionReason,
     send, unlink, leave, users,
+    useMessages,
   } = useKrmx();
+  const [counter, setCounter] = useState(0);
+  useMessages((message: unknown) => {
+    console.info('received', message);
+    setCounter(c => c + 1);
+  }, []);
   if (!isConnected) {
     // Your logic for when the app cannot connect to the server goes here
     return <>
@@ -40,6 +44,7 @@ function MyComponent() {
     <button onClick={() => send({ type: 'custom/hello' })}>Send custom/hello</button>
     <button onClick={leave}>Leave</button>
     <button onClick={unlink}>Unlink</button>
+    <p>You have received {counter} message(s) from the server.</p>
     <h2>Users</h2>
     <ul>
       {Object.entries(users).map(([otherUsername, { isLinked }]) => <li key={otherUsername}>{isLinked ? '🟢' : '🔴'} {otherUsername}</li>)}

@@ -65,20 +65,21 @@ server.unlink(username);
 See the [Server](/sdk/interfaces/Krmx_Server.Server.html) interface for more information about these methods.
 
 ### User Authentication
-Right before a user joins the server, the server emits an authenticate event with some information about the user. Within the a listener to this event you have the ability to reject the user.
+Right before a user joins the server, the server emits an authenticate event with some information about the user. Within this listener you have the ability to reject the user.
 
 ```ts
 import { Server } from '@krmx/server';
 declare const server: Server;
 
 server.on('authenticate', (username, info, reject) => {
-    // example: don't let a new user join if the server is full
+    // example: don't let a new user join if the server is full.
     if (info.isNewUser && server.getUsers().length >= 10) {
         reject('server is full');
     }
 
-    // example: validate authentication where checkValidAuth is your custom code that
-    //          validate the authentication provided by the client
+    // example: validate authentication -- where `checkValidAuth` is a custom method that
+    //                                     can validate the auth value provided by the
+    //                                     client.
     if (info.auth === undefined || !checkValidAuth(username, info.auth)) {
         reject('authentication failed');
     }
