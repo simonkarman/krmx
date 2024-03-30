@@ -87,7 +87,7 @@ export default function MyApp() {
 }
 function MyComponent() {
   const { isConnected, isLinked, link, rejectionReason, send, leave, users, useMessages } = useKrmx();
-  useMessages((message) => console.info(message));
+  useMessages((message) => console.info(message), []);
   if (!isConnected) {
     // Your logic for when you're not connected to the server goes here
     return <p>No connection to the server...</p>;
