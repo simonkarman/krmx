@@ -53,7 +53,7 @@ export interface Props {
     /**
      * The http path the Server should use for the websocket server.
      *
-     * @default When not provided, the websocket server will be use the root path.
+     * @default When not provided, the websocket server will use the root path.
      */
     path?: string;
 

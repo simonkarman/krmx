@@ -514,12 +514,13 @@ describe('Krmx Server', () => {
       await sleep();
       const userUnlinkedMessage = { type: 'krmx/unlinked', payload: { username: 'simon' } };
       const userLeftMessage = { type: 'krmx/left', payload: { username: 'simon' } };
-      expect(simon.emit.message).toHaveBeenCalledWith(userUnlinkedMessage);
-      expect(simon.emit.message).toHaveBeenCalledWith(userLeftMessage);
+      expect(simon.emit.message).toHaveBeenNthCalledWith(6, userUnlinkedMessage);
+      expect(simon.emit.message).toHaveBeenNthCalledWith(7, userLeftMessage);
       expect(simon.emit.close).not.toHaveBeenCalled();
-      expect(lisa.emit.message).toHaveBeenCalledWith(userUnlinkedMessage);
-      expect(lisa.emit.message).toHaveBeenCalledWith(userLeftMessage);
+      expect(lisa.emit.message).toHaveBeenNthCalledWith(6, userUnlinkedMessage);
+      expect(lisa.emit.message).toHaveBeenNthCalledWith(7, userLeftMessage);
       expect(serverEmit.leave).toHaveBeenCalledWith('simon');
+      expect(serverEmit.leave).toHaveBeenCalledTimes(1);
       expect(server.getUsers()).toStrictEqual([
         { username: 'lisa', isLinked: true },
       ]);
@@ -586,7 +587,7 @@ describe('Krmx Server', () => {
   );
 
   it('should use existing http server when provided',
-    withCustomServer({ http: { server: new http.Server() } }, async ({ server, addUser }) => {
+    withCustomServer({ http: { server: new http.Server() } }, async ({ addUser }) => {
       await addUser('simon');
     }),
   );
