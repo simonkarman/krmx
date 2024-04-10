@@ -5,6 +5,9 @@ These steps help you setup a NodeJS TypeScript backend server and a TypeScript R
 To be able to follow this demo you need the following tools installed on your system.
 - npm (recommended version 18.x or higher)
 - a code editor (such as Visual Studio Code or IntelliJ)
+- if your system doesn't have `touch`, then install the `touch-cli` using `npm install touch-cli -g`
+
+> This demo has been written and tested on **macOS**. This demo should generally work on other systems too. When you're using either **Linux** or **Windows** you might you mind have to install some additional dependencies.
 
 ## Application Directory
 First create a directory for our application.
@@ -29,7 +32,7 @@ npm install @krmx/server
 touch server.ts
 ```
 
-Then, in your server/package.json add the following script.
+Then, in your server/package.json add the following script. This script will start your server in dev mode. It will restart your server any time it detects changes to the `server.ts` file.
 ```json
 ...
 "scripts": {
@@ -58,6 +61,12 @@ server.listen(8082);
 Now start your server with `npm run dev`. Everytime you make changes to your `server.ts` file, the server will automatically reload.
 
 If your server is up and running, Krmx clients should be able to connect using `ws://localhost:8082` on your local machine.
+
+If you would like to version control your application using git, then include the following `.gitignore` file in the `server/` directory:
+```gitignore copy
+# in server/.gitignore
+node_modules
+```
 
 > To continue with the demo, you need to keep the server running. So before you continue, open a new terminal first.
 
@@ -132,5 +141,5 @@ After following this demo we recommend you to try the following.
   - How do you make sure that you can fill in your own name when joining?
   - How to allow a maximum of 4 users on a server?
 - Look at some [reference implementations](/getting-started/references).
-- Learn more about the [Krmx server](/server)
-- Learn more about the [Krmx clients](/clients)
+- Learn more about the [Krmx server](/krmx-api/server)
+- Learn more about the [Krmx client](/krmx-api/client)
