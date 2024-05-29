@@ -1,2 +1,2 @@
 export * from './version';
-export * from './server';
+export * from './client';

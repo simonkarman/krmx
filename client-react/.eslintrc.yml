@@ -1,15 +1,22 @@
 env:
-  browser: false
+  browser: true
   es2021: true
 extends:
   - 'eslint:recommended'
   - 'plugin:@typescript-eslint/recommended'
+  - 'plugin:react/recommended'
 parser: '@typescript-eslint/parser'
 parserOptions:
   ecmaVersion: 12
   sourceType: module
+  ecmaFeatures:
+    jsx: true
 plugins:
   - '@typescript-eslint'
+  - 'react'
+settings:
+  react:
+    version: 'detect'
 rules:
   max-len:
     - error
@@ -19,7 +26,8 @@ rules:
   no-console: off
   no-param-reassign: off
   no-restricted-syntax: off
-  no-use-before-define:
+  no-use-before-define: off
+  '@typescript-eslint/no-use-before-define':
     - error
     - functions: false
       classes: false
@@ -76,3 +84,4 @@ rules:
   no-template-curly-in-string: off
   no-new: off
   '@typescript-eslint/no-explicit-any': error
+  '@typescript-eslint/no-empty-function': off

@@ -71,19 +71,19 @@ node_modules
 > To continue with the demo, you need to keep the server running. So before you continue, open a new terminal first.
 
 ## Create a Krmx client
-Next, we're going to set up a React client using the [@krmx/client](https://www.npmjs.com/package/@krmx/client) reference implementation.
+Next, we're going to set up a React client using the [@krmx/client-react](https://www.npmjs.com/package/@krmx/client-react) reference implementation.
 
 ```bash copy
 cd my-first-krmx-app
 npx create-next-app client --use-npm --ts --src-dir --eslint --tailwind --app --import-alias '@/*'
 cd client
-npm install @krmx/client
+npm install @krmx/client-react
 ```
 
 Then, you can create a simple React client using the following setup in `client/src/app/page.tsx`.
 ```js copy
 "use client";
-import { KrmxProvider, useKrmx } from '@krmx/client';
+import { KrmxProvider, useKrmx } from '@krmx/client-react';
 import { useState } from 'react';
 
 export default function MyApp() {

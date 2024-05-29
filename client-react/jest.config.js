@@ -4,4 +4,12 @@ module.exports = {
   testEnvironment: 'node',
   testPathIgnorePatterns: ['/dist/'],
   coveragePathIgnorePatterns: ['/node_modules/', '/test/'],
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        babelConfig: true,
+      },
+    ],
+  },
 };
