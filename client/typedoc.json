@@ -1,5 +1,5 @@
 {
   "name": "Krmx Client",
   "includeVersion": true,
-  "entryPoints": ["./src/index.tsx"]
+  "entryPoints": ["./src/index.ts"]
 }
