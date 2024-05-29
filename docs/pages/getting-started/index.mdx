@@ -57,19 +57,19 @@ If you start your server, the Krmx server will start and clients will be able to
 [More information about the Krmx server](/server).
 
 ### Client
-In your React project, install the `@krmx/client` package using npm or yarn.
+In your React project, install the `@krmx/client-react` package using npm or yarn.
 ```bash
-npm install @krmx/client
+npm install @krmx/client-react
 
 # or use yarn
-yarn add @krmx/client
+yarn add @krmx/client-react
 ```
 
 Then, you can create a simple React component that serves as a client using the following setup.
 
 <CodeBox title='Example Client Code'>
   ```js copy
-  import { KrmxProvider, useKrmx } from '@krmx/client';
+  import { KrmxProvider, useKrmx } from '@krmx/client-react';
   import { useState } from 'react';
 
   export default function MyApplication() {

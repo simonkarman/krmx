@@ -1,0 +1,5 @@
+{
+  "name": "Krmx Client for React",
+  "includeVersion": true,
+  "entryPoints": ["./src/index.tsx"]
+}

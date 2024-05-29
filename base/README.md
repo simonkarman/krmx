@@ -1,8 +1,8 @@
 # @krmx/client
-The Krmx client implementation written in TypeScript. Krmx is a network protocol for realtime multi-user interactions. You can find the documentation of Krmx [here](https://simonkarman.github.io/krmx).
+The base classes required by the Krmx Server and Krmx Client implementations written in TypeScript. Krmx is a network protocol for realtime multi-user interactions. You can find the documentation of Krmx [here](https://simonkarman.github.io/krmx).
 
 ```bash
-npm install @krmx/client
+npm install @krmx/base
 ```
 
 ## Getting Started

@@ -8,11 +8,13 @@ If you want to build your own application using Krmx, you should start be readin
 If you want to help improve Krmx or add new features. You can create a pull request. You can find the different components in these directories:
 
 - [docs/](./docs): documentation of both the Krmx protocol and the reference implementations
+- [base/](./base): shared code between the Krmx client and Krmx server in TypeScript
 - [server/](./server): reference implementation of a Krmx server in TypeScript NodeJS
-- [client/](./client): reference implementation of a Krmx client as a React hook
+- [client/](./client): reference implementation of a Krmx client in TypeScript (compatible NodeJS and browser)
+- [client-react/](./client-react): reference implementation of a Krmx client as a React component and hook
 - [package.json](./package.json): root module that uses Husky to set up a pre-commit git hook that executes `npm run precommit` in every submodule
 
-Both the server and client implementations are published on npm under the [krmx](https://www.npmjs.com/org/krmx) npmjs organisation.
+The base, server and client implementations are published on npm under the [krmx](https://www.npmjs.com/org/krmx) npmjs organisation.
 
 > Possible upcoming features and ideas can be found in [features.md](./features.md).
 

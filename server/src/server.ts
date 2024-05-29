@@ -2,36 +2,12 @@ import http from 'http';
 import { DateTime } from 'luxon';
 import short from 'short-uuid';
 import ws, { AddressInfo, RawData, WebSocket, WebSocketServer } from 'ws';
-import { EventGenerator, EventEmitter } from './event-generator';
+import {
+  EventGenerator, EventEmitter, Logger, LogSeverity, FromServerMessage, FromConnectionMessage,
+  JoinedMessage, LinkedMessage, UnlinkedMessage, LeftMessage, RejectedMessage, AcceptedMessage,
+} from '@krmx/base';
 import { ExpectedQueryParams, hasExpectedQueryParams } from './utils';
 import { VERSION } from './version';
-
-interface LinkMessage { type: 'krmx/link', payload: { username: string, version: string, auth?: string } }
-interface UnlinkMessage { type: 'krmx/unlink' }
-interface LeaveMessage { type: 'krmx/leave' }
-type FromConnectionMessage = LinkMessage | UnlinkMessage | LeaveMessage;
-
-interface RejectedMessage { type: 'krmx/rejected', payload: { reason: string } }
-interface AcceptedMessage { type: 'krmx/accepted' }
-interface JoinedMessage { type: 'krmx/joined', payload: { username: string } }
-interface LinkedMessage { type: 'krmx/linked', payload: { username: string } }
-interface UnlinkedMessage { type: 'krmx/unlinked', payload: { username: string } }
-interface LeftMessage { type: 'krmx/left', payload: { username: string } }
-type FromServerMessage = RejectedMessage | AcceptedMessage | JoinedMessage |
-  LinkedMessage | UnlinkedMessage | LeftMessage;
-
-/**
- * The severity of a log message.
- */
-export type LogSeverity = 'debug' | 'info' | 'warn' | 'error';
-
-/**
- * Logger that the Server will use to output log messages.
- *
- * @param severity Indicates the severity of the log message.
- * @param args The arguments that describe the event that occurred.
- */
-export type Logger = (severity: LogSeverity, ...args: unknown[]) => void;
 
 /**
  * The properties with which to create the Server.
@@ -117,6 +93,7 @@ export interface Props {
 export type Status = 'initializing' | 'starting' | 'listening' | 'closing' | 'closed';
 
 /**
+ * // TODO: move to @krmx/base
  * Representation of a user on the server.
  */
 export interface User {
@@ -132,6 +109,7 @@ export interface User {
 }
 
 /**
+ * // TODO: move to @krmx/base
  * A message.
  */
 export type Message = { type: string };
@@ -168,16 +146,16 @@ export type Events = {
   join: [username: string];
 
   /**
-   * This event is emitted every time a user has linked to a connection.
+   * This event is emitted every time a connection has linked to a user.
    *
-   * @param username The username of the user that linked to a connection.
+   * @param username The username of the user that was linked to a connection.
    */
   link: [username: string];
 
   /**
-   * This event is emitted every time a user has unlinked from its connection.
+   * This event is emitted every time a connection has unlinked from its user.
    *
-   * @param username The username of the user that unlinked from its connection.
+   * @param username The username of the user that was unlinked from its connection.
    */
   unlink: [username: string];
 

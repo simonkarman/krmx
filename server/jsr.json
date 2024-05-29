@@ -1,5 +1,0 @@
-{
-  "name": "@game/krmx-server",
-  "version": "0.4.1",
-  "exports": "./src/index.ts"
-}

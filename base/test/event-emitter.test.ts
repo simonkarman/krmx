@@ -1,4 +1,4 @@
-import { EventGenerator } from '../src/event-generator';
+import { EventGenerator } from '../src';
 
 describe('Event Emitter', () => {
   describe('Basic Functionality', () => {
