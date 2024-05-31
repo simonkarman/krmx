@@ -2,7 +2,7 @@ import { VERSION } from './version';
 import { EventEmitter, EventGenerator, FromServerMessage, Logger, LogSeverity } from '@krmx/base';
 
 // TODO: move to @krmx/base
-type MessageConsumer = <TMessage extends { type: string, payload: unknown }>(message: TMessage) => void;
+type MessageConsumer = <TMessage extends { type: string, payload?: unknown }>(message: TMessage) => void;
 
 /**
  * // TODO: move to @krmx/base
@@ -90,6 +90,8 @@ export type Events = {
   /**
    * This event is emitted every time a user has left.
    *
+   * Note: A client will never receive a leave event for itself as it has already unlink by the time the leave event is emitted.
+   *
    * @param username The username of the user that left.
    */
   leave: [username: string];
@@ -173,11 +175,11 @@ export type Client = {
  */
 interface Props {
   /**
-   * The logger that the Client should use.
+   * The logger that the Client should use. If set to false, no logs will be emitted.
    *
    * @default When not provided, it will log (non debug) to the standard console.
    */
-  logger?: Logger;
+  logger?: Logger | false;
 }
 
 /**
@@ -208,9 +210,13 @@ class ClientImpl extends EventGenerator<Events> implements Client {
 
   private constructor(props?: Props) {
     super();
-    this.logger = props?.logger ?? ((severity: LogSeverity, ...args: unknown[]) => {
-      severity !== 'debug' && console[severity](`[${severity}] [server]`, ...args);
-    });
+    if (props?.logger === false) {
+      this.logger = () => { /*none*/ };
+    } else {
+      this.logger = props?.logger ?? ((severity: LogSeverity, ...args: unknown[]) => {
+        severity !== 'debug' && console[severity](`[${severity}] [client]`, ...args);
+      });
+    }
     this.status = 'initializing';
   }
   static create(props?: Props): Client {
@@ -218,9 +224,10 @@ class ClientImpl extends EventGenerator<Events> implements Client {
   }
 
   public connect(serverUrl: string): Promise<void> {
-    this.canOnly('connect', ['initializing', 'closed']);
-    this.status = 'connecting';
     return new Promise<void>((resolve, reject) => {
+      this.canOnly('connect', ['initializing', 'closed']);
+      this.status = 'connecting';
+
       this.socket = new WebSocket(serverUrl);
       this.socket.onmessage = (rawMessage) => {
         const message: Message = JSON.parse(rawMessage.data.toString());
@@ -228,10 +235,10 @@ class ClientImpl extends EventGenerator<Events> implements Client {
           const krmxMessage = message as FromServerMessage;
           this.onInternalMessage(krmxMessage);
         } else {
-          if (this.status !== 'linked') {
+          if (this.status === 'linked') {
             this.emit('message', message);
           } else {
-            this.logger('warn', `unexpectedly received a custom message ${message.type}, while the client is not yet linked`);
+            this.logger('warn', `unexpectedly received a custom message ${message.type}, while the client is ${this.status}`);
           }
         }
       };
@@ -303,11 +310,6 @@ class ClientImpl extends EventGenerator<Events> implements Client {
       break;
     case 'krmx/left':
       delete this.users[krmxMessage.payload.username];
-      if (krmxMessage.payload.username === this.username) {
-        this.status = 'closing';
-        this.users = {};
-        this.username = undefined;
-      }
       this.emit('leave', krmxMessage.payload.username);
       break;
     default:
@@ -316,20 +318,22 @@ class ClientImpl extends EventGenerator<Events> implements Client {
   }
 
   public link(username: string, auth?: string): Promise<void> {
-    this.canOnly('link', 'connected');
-    this.username = username;
-    this.status = 'linking';
     return new Promise((resolve, reject) => {
-      this.on('accept', () => resolve()); // TODO: this.once instead of on
+      this.canOnly('link', 'connected');
+      this.username = username;
+      this.status = 'linking';
+
+      this.on('link', () => resolve()); // TODO: this.once instead of on
       this.on('reject', (reason) => { reject(new Error(reason)); }); // TODO: this.once instead of on
       this.socket?.send(JSON.stringify({ type: 'krmx/link', payload: { username, version: VERSION, auth } }));
     });
   }
 
   public unlink(): Promise<void> {
-    this.canOnly('send', 'linked');
-    this.status = 'unlinking';
     return new Promise((resolve) => {
+      this.canOnly('send', 'linked');
+      this.status = 'unlinking';
+
       this.on('unlink', (username) => { // TODO: this.once instead of on
         if (username === this.username) {
           resolve();
@@ -340,23 +344,31 @@ class ClientImpl extends EventGenerator<Events> implements Client {
   }
 
   public disconnect(force?: boolean): Promise<void> {
-    this.canOnly('disconnect', [
-      'connected', 'linking', 'unlinking',
-      ...(force ? ['connecting', 'linked', 'closing'] as const : []),
-    ]);
-    this.status = 'closing';
-    this.username = undefined;
     return new Promise<void>((resolve) => {
+      this.canOnly('disconnect', [
+        'connected', 'linking', 'unlinking',
+        ...(force ? ['connecting', 'linked', 'closing'] as const : []),
+      ]);
+      this.status = 'closing';
+      this.username = undefined;
+
       this.on('close', resolve); // TODO: this.once instead of on
       this.socket?.close();
     });
   }
 
   leave(): Promise<void> {
-    this.canOnly('leave', 'linked');
-    this.status = 'closing';
     return new Promise<void>((resolve) => {
-      this.on('close', resolve); // TODO: this.once instead of on
+      this.canOnly('leave', 'linked');
+      this.status = 'connected';
+
+      // Notice: even tho this is a 'leave' function, 'unlink' is correct here. This is because the 'unlink' event is the last we receive for
+      //         ourselves. As after unlinking has taken place we will not receive any further messages, including the 'leave' message.
+      this.on('unlink', (username) => { // TODO: this.once instead of on
+        if (username === this.username) {
+          resolve();
+        }
+      });
       this.socket?.send(JSON.stringify({ type: 'krmx/leave' }));
     });
   }
