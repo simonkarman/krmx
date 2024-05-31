@@ -3,8 +3,9 @@ import { DateTime } from 'luxon';
 import short from 'short-uuid';
 import ws, { AddressInfo, RawData, WebSocket, WebSocketServer } from 'ws';
 import {
-  EventGenerator, EventEmitter, Logger, LogSeverity, FromServerMessage, FromConnectionMessage,
+  EventGenerator, EventEmitter, Logger, LogSeverity, FromServerMessage, FromClientMessage,
   JoinedMessage, LinkedMessage, UnlinkedMessage, LeftMessage, RejectedMessage, AcceptedMessage,
+  Message, User, LinkMessage,
 } from '@krmx/base';
 import { ExpectedQueryParams, hasExpectedQueryParams } from './utils';
 import { VERSION } from './version';
@@ -91,28 +92,6 @@ export interface Props {
  * @description *closed*: The server has closed.
  */
 export type Status = 'initializing' | 'starting' | 'listening' | 'closing' | 'closed';
-
-/**
- * // TODO: move to @krmx/base
- * Representation of a user on the server.
- */
-export interface User {
-  /**
-   * The name of the user.
-   */
-  username: string;
-
-  /**
-   * Whether the user is linked to a connection.
-   */
-  isLinked: boolean;
-}
-
-/**
- * // TODO: move to @krmx/base
- * A message.
- */
-export type Message = { type: string };
 
 export type Events = {
   /**
@@ -377,7 +356,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       }
     }
   }
-  private onUnlinkedConnectionMessage(connectionId: string, message: FromConnectionMessage | Message) {
+  private onUnlinkedConnectionMessage(connectionId: string, message: FromClientMessage | Message) {
     let rejected = false;
     const reject = (reason: string) => {
       if (rejected) { return; }
@@ -391,15 +370,15 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       return;
     }
     if (
-      !('payload' in message)
-      || typeof (message.payload.username as unknown) !== 'string'
-      || typeof (message.payload.version as unknown) !== 'string'
-      || (typeof (message.payload.auth as unknown) !== 'undefined' && typeof (message.payload.auth as unknown) !== 'string')
+      !('payload' in message) || typeof message.payload !== 'object' || message.payload === null // check for payload
+      || !('username' in message.payload) || typeof message.payload.username !== 'string' // check for username
+      || !('version' in message.payload) || typeof message.payload.version !== 'string' // check for version
+      || ('auth' in message.payload && typeof message.payload.auth !== 'undefined' && typeof message.payload.auth !== 'string') // check for auth
     ) {
       reject('invalid link request');
       return;
     }
-    const { username, version: clientVersion, auth } = message.payload;
+    const { username, version: clientVersion, auth } = message.payload as LinkMessage['payload'];
     const serverVersionWithoutPatch = VERSION.substring(0, VERSION.lastIndexOf('.'));
     if (!clientVersion.startsWith(serverVersionWithoutPatch)) {
       reject(`krmx server version mismatch (server=${serverVersionWithoutPatch}.*,client=${clientVersion})`);
@@ -430,7 +409,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     }
     this.link(connectionId, username);
   }
-  private onLinkedConnectionMessage(username: string, message: FromConnectionMessage | Message) {
+  private onLinkedConnectionMessage(username: string, message: FromClientMessage | Message) {
     switch (message.type) {
     case 'krmx/link':
     case 'krmx/unlink':

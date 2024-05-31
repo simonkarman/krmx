@@ -1,30 +1,8 @@
 import { VERSION } from './version';
-import { EventEmitter, EventGenerator, FromServerMessage, Logger, LogSeverity } from '@krmx/base';
-
-// TODO: move to @krmx/base
-type MessageConsumer = <TMessage extends { type: string, payload?: unknown }>(message: TMessage) => void;
-
-/**
- * // TODO: move to @krmx/base
- * A message.
- */
-export type Message = { type: string };
-
-/**
- * // TODO: move to @krmx/base
- * Representation of a user on the server.
- */
-export interface User {
-  /**
-   * The name of the user.
-   */
-  username: string;
-
-  /**
-   * Whether the user is linked to a connection.
-   */
-  isLinked: boolean;
-}
+import {
+  EventEmitter, EventGenerator, FromServerMessage, Logger, LogSeverity,
+  Message, User, MessageConsumer,
+} from '@krmx/base';
 
 /**
  * Status of a client.
