@@ -1,5 +1,6 @@
 import ws from 'ws';
-import { createServer, Message, Props, Server, VERSION } from '../src';
+import { createServer, Props, Server, VERSION } from '../src';
+import { Message } from '@krmx/base';
 
 export const sleep = (ms = 75) => new Promise((r) => setTimeout(r, ms));
 

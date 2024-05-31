@@ -22,11 +22,10 @@
     "prepublishOnly": "npm install && npm run precommit"
   },
   "dependencies": {
-    "@krmx/base": "^0.5.0",
-    "immer": "^10.0.3"
+    "@krmx/base": "^0.5.1"
   },
   "devDependencies": {
-    "@krmx/server": "^0.5.0",
+    "@krmx/server": "^0.5.1",
     "@types/jest": "^29.5.1",
     "@types/node": "^20.12.12",
     "@types/ws": "^8.5.9",
