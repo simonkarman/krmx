@@ -1,6 +1,9 @@
 import React, { ReactElement, useState } from 'react';
-import { create } from 'react-test-renderer';
+import { act, create } from 'react-test-renderer';
 import { KrmxProvider, useKrmx } from '../src';
+import { createServer } from '@krmx/server';
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 global['WebSocket'] = require('ws');
 global['crypto'] = require('crypto');
@@ -64,5 +67,48 @@ describe('Client', () => {
         + '{"type":"button","props":{},"children":["Reconnect"]}'
       + ']"',
     );
+  });
+  it('useKrmx should connect to the server', async () => {
+    const server = createServer();
+    try {
+      // Wait for server to start
+      const portNumber = await new Promise<number>((resolve) => {
+        server.on('listen', resolve);
+        server.listen();
+      });
+      const myApp = create(<MyApp serverUrl={'ws://localhost:' + (portNumber - 1)}/>);
+
+      // Connect to server
+      await act(async () => {
+        myApp.update(<MyApp serverUrl={'ws://localhost:' + portNumber}/>);
+        await sleep(50);
+      });
+      expect(JSON.stringify(myApp.toJSON())).toMatchInlineSnapshot(
+        '"['
+        + '{"type":"h1","props":{},"children":["Login"]},'
+        + '{"type":"button","props":{},"children":["Join!"]}'
+        + ']"',
+      );
+
+      // Link!
+      await act(async () => {
+        myApp.root.findByType('button').props.onClick();
+        await sleep(20);
+      });
+      expect(JSON.stringify(myApp.toJSON())).toMatchInlineSnapshot(
+        '"[' +
+        '{"type":"h1","props":{},"children":["Welcome ",{"type":"strong","props":{},"children":["simon"]},"!"]},' +
+        '{"type":"button","props":{},"children":["Send custom/hello"]},{"type":"button","props":{},"children":["Leave"]},' +
+        '{"type":"button","props":{},"children":["Unlink"]},' +
+        '{"type":"p","props":{},"children":["You have received ","0"," message(s) from the server."]},' +
+        '{"type":"h2","props":{},"children":["Users"]},{"type":"ul","props":{},"children":[{"type":"li","props":{},"children":["🟢"," ","simon"]}]}' +
+        ']"',
+      );
+    } finally {
+      await new Promise<void>((resolve) => {
+        server.on('close', resolve);
+        server.close();
+      });
+    }
   });
 });

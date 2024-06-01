@@ -11,15 +11,7 @@ import React, {
 } from 'react';
 import { produce } from 'immer';
 import { VERSION } from './version';
-
-interface RejectedMessage { type: 'krmx/rejected', payload: { reason: string } }
-interface AcceptedMessage { type: 'krmx/accepted' }
-interface JoinedMessage { type: 'krmx/joined', payload: { username: string } }
-interface LinkedMessage { type: 'krmx/linked', payload: { username: string } }
-interface UnlinkedMessage { type: 'krmx/unlinked', payload: { username: string } }
-interface LeftMessage { type: 'krmx/left', payload: { username: string } }
-type FromServerMessage = RejectedMessage | AcceptedMessage | JoinedMessage |
-  LinkedMessage | UnlinkedMessage | LeftMessage;
+import { FromServerMessage } from '@krmx/base';
 
 interface ResetAction { type: 'reset', payload: { username: string } }
 type Action = ResetAction | FromServerMessage;
