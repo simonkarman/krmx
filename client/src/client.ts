@@ -236,24 +236,22 @@ class ClientImpl extends EventGenerator<Events> implements Client {
         this.username = undefined;
         this.users = {};
         this.emit('close');
-      };
-      this.socket.onerror = () => {
-        this.logger('debug', 'socket error');
-        close();
-        // TODO: should this still close the connection?
         if (isConnecting) {
           isConnecting = false;
           reject(new Error(`error while trying to connect to the server at ${serverUrl}`));
         }
       };
+      this.socket.onerror = () => {
+        this.logger('debug', 'socket error');
+        close();
+      };
       this.socket.onclose = () => {
-        // TODO: use event.wasClean to reconnect?
+        // TODO: evaluate reconnecting behaviour
+        // if (!event.wasClean || this.status !== 'closing') {
+        //   this.connect(serverUrl).catch(() => { /*none*/ });
+        // }
         this.logger('debug', 'socket closed');
         close();
-        if (isConnecting) {
-          isConnecting = false;
-          reject(new Error(`could not connect to the server at ${serverUrl}`));
-        }
       };
     });
   }
@@ -321,21 +319,7 @@ class ClientImpl extends EventGenerator<Events> implements Client {
     });
   }
 
-  public disconnect(force?: boolean): Promise<void> {
-    return new Promise<void>((resolve) => {
-      this.canOnly('disconnect', [
-        'connected', 'linking', 'unlinking',
-        ...(force ? ['connecting', 'linked', 'closing'] as const : []),
-      ]);
-      this.status = 'closing';
-      this.username = undefined;
-
-      this.on('close', resolve); // TODO: this.once instead of on
-      this.socket?.close();
-    });
-  }
-
-  leave(): Promise<void> {
+  public leave(): Promise<void> {
     return new Promise<void>((resolve) => {
       this.canOnly('leave', 'linked');
       this.status = 'connected';
@@ -348,6 +332,20 @@ class ClientImpl extends EventGenerator<Events> implements Client {
         }
       });
       this.socket?.send(JSON.stringify({ type: 'krmx/leave' }));
+    });
+  }
+
+  public disconnect(force?: boolean): Promise<void> {
+    return new Promise<void>((resolve) => {
+      this.canOnly('disconnect', [
+        'connected', 'linking', 'unlinking',
+        ...(force ? ['connecting', 'linked', 'closing'] as const : []),
+      ]);
+      this.status = 'closing';
+      this.username = undefined;
+
+      this.on('close', resolve); // TODO: this.once instead of on
+      this.socket?.close();
     });
   }
 
