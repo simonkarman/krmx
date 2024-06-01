@@ -13,7 +13,7 @@ describe('createClient', () => {
     });
     try {
       const portNumber = await new Promise<number>((resolve) => {
-        server.on('listen', resolve.bind(this));
+        server.on('listen', resolve);
         server.listen();
       });
       const client = createClient();
@@ -83,7 +83,7 @@ describe('createClient', () => {
       expect(client.getStatus()).toBe('closed');
     } finally {
       await new Promise<void>((resolve) => {
-        server.on('close', resolve.bind(this));
+        server.on('close', resolve);
         server.close();
       });
     }
@@ -92,7 +92,7 @@ describe('createClient', () => {
   it('should show when other clients are joining, linking, unlinking, and leaving', async () => {
     const server = createServer();
     const portNumber = await new Promise<number>((resolve) => {
-      server.on('listen', resolve.bind(this));
+      server.on('listen', resolve);
       server.listen();
     });
     const simon = createClient();
@@ -138,7 +138,7 @@ describe('createClient', () => {
     await otherClient.disconnect();
     await simon.disconnect(true);
     await new Promise<void>((resolve) => {
-      server.on('close', resolve.bind(this));
+      server.on('close', resolve);
       server.close();
     });
     expect(simon.getUsers().length).toBe(0);
