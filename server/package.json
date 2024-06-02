@@ -16,7 +16,7 @@
     "prepublishOnly": "npm install && npm run precommit"
   },
   "dependencies": {
-    "@krmx/base": "^0.5.1",
+    "@krmx/base": "^0.5.2",
     "luxon": "^3.3.0",
     "short-uuid": "^4.2.2",
     "ws": "^8.13.0"
