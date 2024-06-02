@@ -277,12 +277,19 @@ class ClientImpl extends EventGenerator<Events> implements Client {
       break;
     case 'krmx/unlinked':
       this.users[krmxMessage.payload.username].isLinked = false;
-      this.emit('unlink', krmxMessage.payload.username);
       if (krmxMessage.payload.username === this.username) {
         this.status = 'connected';
         this.users = {};
+      }
+      this.emit('unlink', krmxMessage.payload.username);
+      if (krmxMessage.payload.username === this.username) {
         this.username = undefined;
       }
+      // The above code is confusing. Some fields are reset before and some after the emit. This is because the client should no longer be in the
+      //  'linked' state as the event is emitted, but we do still require the username to be set, so that the listeners to the 'unlink' event can
+      //  still check if this was a self unlink.
+      // TODO: this confusion could be cleared up, if after unlinking, the server would emit a 'ready-to-(re)link' message. This would also mean the
+      //        krmx/accepted message could be replaced with the krmx/ready-to-link message for consistency.
       break;
     case 'krmx/left':
       delete this.users[krmxMessage.payload.username];

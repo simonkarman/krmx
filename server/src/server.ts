@@ -47,7 +47,7 @@ export interface Props {
    *
    * @default When not provided, it will log (non debug) to the standard console.
    */
-  logger?: Logger;
+  logger?: Logger | false;
 
   /**
    * Whether metadata should be added to messages send over websocket connections.
@@ -256,9 +256,13 @@ class ServerImpl extends EventGenerator<Events> implements Server {
   private constructor(props?: Props) {
     super();
     this.httpQueryParams = props?.http?.queryParams || {};
-    this.logger = props?.logger ?? ((severity: LogSeverity, ...args: unknown[]) => {
-      severity !== 'debug' && console[severity](`[${severity}] [server]`, ...args);
-    });
+    if (props?.logger === false) {
+      this.logger = () => { /*none*/ };
+    } else {
+      this.logger = props?.logger ?? ((severity: LogSeverity, ...args: unknown[]) => {
+        severity !== 'debug' && console[severity](`[${severity}] [server]`, ...args);
+      });
+    }
     this.metadata = props?.metadata ?? false;
     this.acceptNewUsers = props?.acceptNewUsers ?? true;
     this.isValidUsername = props?.isValidUsername ?? ((username: string) => /^[a-z0-9]{3,20}$/.test(username));
@@ -465,7 +469,11 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     if (connection.socket.readyState === ws.WebSocket.OPEN) {
       const data = JSON.stringify({
         ...message,
-        metadata: this.metadata ? { isBroadcast, timestamp: DateTime.now().toUTC().toISO() } : undefined,
+        metadata: this.metadata ? {
+          // ...message.metadata, // TODO: ensure that exising metadata object gets merged (and what should happen if it is not an object?)
+          isBroadcast,
+          timestamp: DateTime.now().toUTC().toISO(),
+        } : undefined, // message.metadata, // TODO: ensure there too!
       });
       connection.socket.send(data);
     } else {
