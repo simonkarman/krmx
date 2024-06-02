@@ -1,7 +1,12 @@
 /**
  * An `EventListener` transform an argument array to a function that returns void and accepts the arguments in the array as its parameters.
  */
-export type EventListener<T extends Array<unknown>> = (...args: T) => void;
+export type EventListener<T extends Array<unknown>, R = void> = (...args: T) => R;
+
+/**
+ * A function that can be called to stop listening to an event.
+ */
+type Unsubscribe = () => void;
 
 /**
  * An `EventEmitter` can be used to listen to structured events based on a provided `EventMap`. The event map describes the possible events. Each
@@ -32,7 +37,26 @@ export interface EventEmitter<EventMap extends Record<string, Array<unknown>>> {
    * @param eventName The name of the event to listen to.
    * @param listener The callback that will be invoked when the event is emitted. It will be invoked with the event information in its arguments.
    */
-  on<K extends keyof EventMap>(eventName: K, listener: EventListener<EventMap[K]>): void;
+  on<K extends keyof EventMap>(
+    eventName: K,
+    listener: EventListener<EventMap[K]>,
+  ): Unsubscribe;
+
+  /**
+   * Start listening to a specific event only once. The provided listener will be invoked the first time the event is emitted.
+   *
+   * If a predicate is provided, the listener will only be invoked if the predicate returns true. The listener will be removed after the first time it
+   *  is invoked. If the predicate returns false, the event subscription will be kept intact, until the predicate returns true.
+   *
+   * @param eventName The name of the event to listen to.
+   * @param listener The callback that will be invoked when the event is emitted. It will be invoked with the event information in its arguments.
+   * @param predicate An optional predicate that can be used to filter out events. If the predicate returns true, the listener will be invoked.
+   */
+  once<K extends keyof EventMap>(
+    eventName: K,
+    listener: EventListener<EventMap[K]>,
+    predicate?: EventListener<EventMap[K], boolean>,
+  ): Unsubscribe;
 
   /**
    * Create new event emitter based on the existing event emitter with custom logic to define which events are passed through or transformed.
@@ -52,6 +76,8 @@ export interface EventEmitter<EventMap extends Record<string, Array<unknown>>> {
    * });
    * myPipedEmitter.on('hello', (name: string) => { ... })
    * myPipedEmitter.on('two', () => { ... })
+   *
+   * TODO: Ensure that the pipe has a similar unsubscribe interface as on and once.
    */
   pipe<NextEventMap extends Record<string, Array<unknown>>>(configureTap: (tap: {
     /**
@@ -92,7 +118,7 @@ export interface EventEmitter<EventMap extends Record<string, Array<unknown>>> {
 }
 
 /**
- * An EventGenerator is a type of EventEmitter that can generate its own events.
+ * An EventGenerator is a type of EventEmitter that exposes the 'emit' method, which allows it to generate events.
  */
 export class EventGenerator<EventMap extends Record<string, Array<unknown>>> implements EventEmitter<EventMap> {
   private eventListeners: {
@@ -101,13 +127,33 @@ export class EventGenerator<EventMap extends Record<string, Array<unknown>>> imp
   private isEmitting: (keyof EventMap)[] = [];
   public name = 'event-emitter';
 
-  public on<K extends keyof EventMap>(eventName: K, listener: EventListener<EventMap[K]>): void {
+  public on<K extends keyof EventMap>(
+    eventName: K,
+    listener: EventListener<EventMap[K]>,
+  ): Unsubscribe {
     if (this.isEmitting.includes(eventName)) {
       throw new Error(`cannot subscribe to '${String(eventName)}' event in ${this.name} while that is also being emitted`);
     }
     const listeners = this.eventListeners[eventName] ?? [];
     listeners.push(listener);
     this.eventListeners[eventName] = listeners;
+    return () => {
+      this.eventListeners[eventName] = listeners.filter(l => l !== listener);
+    };
+  }
+
+  public once<K extends keyof EventMap>(
+    eventName: K,
+    listener: EventListener<EventMap[K]>,
+    predicate?: EventListener<EventMap[K], boolean>,
+  ): Unsubscribe {
+    const unsubscribe = this.on(eventName, (...args) => {
+      if (predicate === undefined || predicate(...args)) {
+        unsubscribe();
+        listener(...args);
+      }
+    });
+    return unsubscribe;
   }
 
   public emit<K extends keyof EventMap>(eventName: K, ...args: EventMap[K]): unknown[] {

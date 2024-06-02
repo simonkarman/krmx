@@ -1,4 +1,4 @@
-import { EventGenerator } from '../src';
+import { EventEmitter, EventGenerator } from '../src';
 
 describe('Event Emitter', () => {
   describe('Basic Functionality', () => {
@@ -112,6 +112,37 @@ describe('Event Emitter', () => {
         }
       }
       new RecursiveEmitter().test();
+    });
+  });
+  describe('Unsubscribe Functionality', () => {
+    type HelloEvent = { hello: [name: string] };
+    it('should allow unsubscribing from an event', () => {
+      const emitter = new EventGenerator<HelloEvent>();
+      const mock = jest.fn();
+      const unsubscribe = emitter.on('hello', mock);
+      emitter.emit('hello', 'world');
+      expect(mock).toHaveBeenCalledTimes(1);
+      unsubscribe();
+      emitter.emit('hello', 'world');
+      expect(mock).toHaveBeenCalledTimes(1);
+    });
+    it('should allow listing to an event only once', () => {
+      const emitter = new EventGenerator<HelloEvent>();
+      const mock = jest.fn();
+      emitter.once('hello', mock, (name: string) => name === 'world');
+      emitter.emit('hello', 'not-world');
+      expect(mock).not.toHaveBeenCalled();
+      emitter.emit('hello', 'world');
+      emitter.emit('hello', 'world');
+      expect(mock).toHaveBeenCalledTimes(1);
+    });
+    it('should allow unsubscribing from a once-event before it was sent out', () => {
+      const emitter = new EventGenerator<HelloEvent>();
+      const mock = jest.fn();
+      const unsubscribe = emitter.once('hello', mock);
+      unsubscribe();
+      emitter.emit('hello', 'world');
+      expect(mock).not.toHaveBeenCalled();
     });
   });
   describe('Pipe Functionality', () => {
