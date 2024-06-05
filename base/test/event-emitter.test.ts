@@ -1,11 +1,12 @@
-import { EventEmitter, EventGenerator } from '../src';
+import { EventGenerator } from '../src';
+
+type ExampleEvents = {
+  hello: [name: string],
+  file: [size: number, name: string];
+}
 
 describe('Event Emitter', () => {
   describe('Basic Functionality', () => {
-    type ExampleEvents = {
-      hello: [name: string],
-      file: [size: number, name: string];
-    }
     class ExampleEmitter extends EventGenerator<ExampleEvents> {
       test(): [unknown[], unknown[]] {
         return [
@@ -119,10 +120,10 @@ describe('Event Emitter', () => {
     it('should allow unsubscribing from an event', () => {
       const emitter = new EventGenerator<HelloEvent>();
       const mock = jest.fn();
-      const unsubscribe = emitter.on('hello', mock);
+      const unsub = emitter.on('hello', mock);
       emitter.emit('hello', 'world');
       expect(mock).toHaveBeenCalledTimes(1);
-      unsubscribe();
+      unsub();
       emitter.emit('hello', 'world');
       expect(mock).toHaveBeenCalledTimes(1);
     });
@@ -139,23 +140,54 @@ describe('Event Emitter', () => {
     it('should allow unsubscribing from a once-event before it was sent out', () => {
       const emitter = new EventGenerator<HelloEvent>();
       const mock = jest.fn();
-      const unsubscribe = emitter.once('hello', mock);
-      unsubscribe();
+      const unsub = emitter.once('hello', mock);
+      unsub();
       emitter.emit('hello', 'world');
       expect(mock).not.toHaveBeenCalled();
     });
     it('should send messages to other listeners even if one listener unsubscribes', () => {
       const emitter = new EventGenerator<HelloEvent>();
-      const mock1 = jest.fn();
-      const mock2 = jest.fn();
-      emitter.once('hello', mock1);
-      emitter.on('hello', mock2);
+      const mock_pre = jest.fn();
+      const mock_once = jest.fn();
+      const mock_post = jest.fn();
+      emitter.on('hello', mock_pre);
+      emitter.once('hello', mock_once);
+      emitter.on('hello', mock_post);
       emitter.emit('hello', 'world');
-      expect(mock1).toHaveBeenCalledTimes(1);
-      expect(mock2).toHaveBeenCalledTimes(1);
+      expect(mock_pre).toHaveBeenCalledTimes(1);
+      expect(mock_once).toHaveBeenCalledTimes(1);
+      expect(mock_post).toHaveBeenCalledTimes(1);
       emitter.emit('hello', 'world');
-      expect(mock1).toHaveBeenCalledTimes(1);
-      expect(mock2).toHaveBeenCalledTimes(2);
+      expect(mock_pre).toHaveBeenCalledTimes(2);
+      expect(mock_once).toHaveBeenCalledTimes(1);
+      expect(mock_post).toHaveBeenCalledTimes(2);
+    });
+  });
+  describe('All Functionality', () => {
+    it('should allow listening to all events', () => {
+      const emitter = new EventGenerator<ExampleEvents>();
+      const mock = jest.fn();
+      const unsub = emitter.all((_eventName, ...args) => {
+        const eventName: 'hello' | 'file' = _eventName;
+        mock(eventName, ...args);
+      });
+      emitter.emit('hello', 'world');
+      emitter.emit('file', 11, 'example.json');
+      expect(mock).toHaveBeenCalledTimes(2);
+      expect(mock).toHaveBeenCalledWith('hello', 'world');
+      expect(mock).toHaveBeenCalledWith('file', 11, 'example.json');
+      unsub();
+      emitter.emit('hello', 'world');
+      expect(mock).toHaveBeenCalledTimes(2);
+    });
+    it('should not allow subscribing to all events while an event is being emitted', () => {
+      const emitter = new EventGenerator<ExampleEvents>();
+      const mock = jest.fn();
+      emitter.on('hello', () => {
+        expect(() => emitter.all(mock)).toThrow('cannot subscribe to all events in event-emitter while an event is being emitted');
+      });
+      emitter.emit('hello', 'world');
+      expect(mock).not.toHaveBeenCalled();
     });
   });
   describe('Pipe Functionality', () => {
