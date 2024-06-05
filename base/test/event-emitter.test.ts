@@ -144,6 +144,19 @@ describe('Event Emitter', () => {
       emitter.emit('hello', 'world');
       expect(mock).not.toHaveBeenCalled();
     });
+    it('should send messages to other listeners even if one listener unsubscribes', () => {
+      const emitter = new EventGenerator<HelloEvent>();
+      const mock1 = jest.fn();
+      const mock2 = jest.fn();
+      emitter.once('hello', mock1);
+      emitter.on('hello', mock2);
+      emitter.emit('hello', 'world');
+      expect(mock1).toHaveBeenCalledTimes(1);
+      expect(mock2).toHaveBeenCalledTimes(1);
+      emitter.emit('hello', 'world');
+      expect(mock1).toHaveBeenCalledTimes(1);
+      expect(mock2).toHaveBeenCalledTimes(2);
+    });
   });
   describe('Pipe Functionality', () => {
     type SourceEvents = { 'hello': [name: string], age: [number], something: [], extraSource: [] };

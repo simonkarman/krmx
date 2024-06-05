@@ -138,6 +138,7 @@ export class EventGenerator<EventMap extends Record<string, Array<unknown>>> imp
     listeners.push(listener);
     this.eventListeners[eventName] = listeners;
     return () => {
+      // Using filter instead of splice to avoid mutating the array while iterating over it.
       this.eventListeners[eventName] = listeners.filter(l => l !== listener);
     };
   }
