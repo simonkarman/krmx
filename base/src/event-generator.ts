@@ -6,7 +6,12 @@ export type EventListener<T extends Array<unknown>, R = void> = (...args: T) => 
 /**
  * A function that can be called to stop listening to an event.
  */
-type Unsubscribe = () => void;
+export type Unsubscribe = () => void;
+
+/**
+ * An `AllEventListener` is a function that is called whenever any event is emitted. It is called with the event name and the arguments of the event.
+ */
+export type AllEventListener<T, R = void> = (eventName: T, ...args: unknown[]) => R;
 
 /**
  * An `EventEmitter` can be used to listen to structured events based on a provided `EventMap`. The event map describes the possible events. Each
@@ -57,6 +62,14 @@ export interface EventEmitter<EventMap extends Record<string, Array<unknown>>> {
     listener: EventListener<EventMap[K]>,
     predicate?: EventListener<EventMap[K], boolean>,
   ): Unsubscribe;
+
+  /**
+   * Start listening to all events. The provided listener will be invoked each time any event is emitted.
+   *
+   * @param listener The callback that will be invoked when any event is emitted. It will be invoked with the event name and the event information in
+   *                  its arguments.
+   */
+  all(listener: AllEventListener<keyof EventMap>): Unsubscribe;
 
   /**
    * Create new event emitter based on the existing event emitter with custom logic to define which events are passed through or transformed.
@@ -121,6 +134,7 @@ export interface EventEmitter<EventMap extends Record<string, Array<unknown>>> {
  * An EventGenerator is a type of EventEmitter that exposes the 'emit' method, which allows it to generate events.
  */
 export class EventGenerator<EventMap extends Record<string, Array<unknown>>> implements EventEmitter<EventMap> {
+  private allEventListeners: AllEventListener<keyof EventMap>[] = [];
   private eventListeners: {
     [K in keyof EventMap]?: EventListener<EventMap[K]>[];
   } = {};
@@ -134,11 +148,12 @@ export class EventGenerator<EventMap extends Record<string, Array<unknown>>> imp
     if (this.isEmitting.includes(eventName)) {
       throw new Error(`cannot subscribe to '${String(eventName)}' event in ${this.name} while that is also being emitted`);
     }
+    // Important! Avoid mutating the original array as someone else might be iterating over it.
     const listeners = this.eventListeners[eventName] ?? [];
-    listeners.push(listener);
-    this.eventListeners[eventName] = listeners;
+    this.eventListeners[eventName] = [...listeners, listener];
     return () => {
-      // Using filter instead of splice to avoid mutating the array while iterating over it.
+      /* istanbul ignore next */
+      const listeners = this.eventListeners[eventName] ?? [];
       this.eventListeners[eventName] = listeners.filter(l => l !== listener);
     };
   }
@@ -157,22 +172,46 @@ export class EventGenerator<EventMap extends Record<string, Array<unknown>>> imp
     return unsubscribe;
   }
 
+  public all(listener: AllEventListener<keyof EventMap>): Unsubscribe {
+    if (this.isEmitting.length > 0) {
+      throw new Error(`cannot subscribe to all events in ${this.name} while an event is being emitted`);
+    }
+    // Important! Avoid mutating the original array as someone else might be iterating over it.
+    this.allEventListeners = [...this.allEventListeners, listener];
+    return () => {
+      this.allEventListeners = this.allEventListeners.filter(l => l !== listener);
+    };
+  }
+
   public emit<K extends keyof EventMap>(eventName: K, ...args: EventMap[K]): unknown[] {
+    // Start emitting
     this.isEmitting.push(eventName);
-    const listeners = this.eventListeners[eventName] ?? [];
     const errors: unknown[] = [];
-    for (const listener of listeners) {
+    const _try = (target: 'all' | 'on', callback: () => void) => {
       try {
-        listener(...args);
+        callback();
       } catch (e: unknown) {
         if (e instanceof Array) {
           errors.push(...e);
         } else {
           errors.push(e);
         }
-        console.error(`[error] [${this.name}] [on:${String(eventName)}]`, e);
+        console.error(`[error] [${this.name}] [${target}:${String(eventName)}]`, e);
       }
+    };
+
+    // Emit event to each catch-all listener
+    for (const listener of this.allEventListeners) {
+      _try('all', () => listener(eventName, ...args));
     }
+
+    // Emit event to each event specific listener
+    const listeners = this.eventListeners[eventName] ?? [];
+    for (const listener of [...listeners]) {
+      _try('on', () => listener(...args));
+    }
+
+    // End emitting
     this.isEmitting.pop();
     return errors;
   }
