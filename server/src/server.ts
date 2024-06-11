@@ -167,13 +167,13 @@ export interface Server extends EventEmitter<Events> {
    *
    * @param port The port number at which to start the server. When not provided, the server will start listening at an available port.
    */
-  listen(port?: number): void;
+  listen(port?: number): Promise</* port */ number>;
 
   /**
    * Close the server.
    * This function is asynchronous, the server is closed when all connections are ended and the server emits a 'close' event.
    */
-  close(): void;
+  close(): Promise<void>;
 
   /**
    * Broadcast a message to all users, that are currently connected to the server.
@@ -284,19 +284,24 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     return new ServerImpl(props);
   }
 
-  public listen(port?: number): void {
-    this.canOnly('start listening', 'initializing');
-    if (this.httpServer.listening) {
-      const httpServerPort = (this.httpServer.address() as AddressInfo).port;
-      if (port !== undefined && port !== httpServerPort) {
-        throw new Error(`cannot start listening on port ${port} as the underlying http server is already listening on port ${httpServerPort}`);
+  public listen(port?: number): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      this.canOnly('start listening', 'initializing');
+      if (this.httpServer.listening) {
+        const httpServerPort = (this.httpServer.address() as AddressInfo).port;
+        if (port !== undefined && port !== httpServerPort) {
+          reject(new Error(`cannot start listening on port ${port} as the underlying http server is already listening on port ${httpServerPort}`));
+          return;
+        }
+        this.onServerListening();
+        resolve(httpServerPort);
+      } else {
+        this.status = 'starting';
+        this.httpServer.on('listening', this.onServerListening.bind(this));
+        this.once('listen', resolve);
+        this.httpServer.listen(port);
       }
-      this.onServerListening();
-    } else {
-      this.status = 'starting';
-      this.httpServer.on('listening', this.onServerListening.bind(this));
-      this.httpServer.listen(port);
-    }
+    });
   }
   private onServerListening() {
     this.status = 'listening';
@@ -443,16 +448,21 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     delete this.connections[connectionId];
   }
 
-  public close(): void {
-    this.canOnly('close', ['starting', 'listening']);
-    this.status = 'closing';
-    this.logger('info', 'server is closing');
-    for (const username in this.users) {
-      this.leave(username);
-    }
-    Object.values(this.connections).forEach(connection => { connection.socket.terminate(); });
-    this.httpServer.close();
-    this.httpServer.closeAllConnections();
+  public close(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      this.canOnly('close', ['starting', 'listening']);
+      this.status = 'closing';
+      this.logger('info', 'server is closing');
+      for (const username in this.users) {
+        this.leave(username);
+      }
+      Object.values(this.connections).forEach(connection => {
+        connection.socket.terminate();
+      });
+      this.once('close', resolve);
+      this.httpServer.close();
+      this.httpServer.closeAllConnections();
+    });
   }
   private onServerClose(): void {
     this.status = 'closed';
