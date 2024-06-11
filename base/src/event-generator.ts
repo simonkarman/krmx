@@ -72,6 +72,19 @@ export interface EventEmitter<EventMap extends Record<string, Array<unknown>>> {
   all(listener: AllEventListener<keyof EventMap>): Unsubscribe;
 
   /**
+   * Wait for a specific event. The returned promise will resolve when the event is emitted. The promise will resolve with the event information.
+   *
+   * @param eventName The name of the event to wait for.
+   * @param predicate Optionally provides a predicate that is invoked with every occurrence of the event. The promise will only resolve once the
+   *                   predicate returns true. It will be invoked with the event information in its arguments. If the predicate throws an error, the
+   *                   promise will be rejected with that error.
+   */
+  waitFor<K extends keyof EventMap>(
+    eventName: K,
+    predicate?: EventListener<EventMap[K], boolean>,
+  ): Promise<EventMap[K]>;
+
+  /**
    * Create new event emitter based on the existing event emitter with custom logic to define which events are passed through or transformed.
    *
    * @param configureTap In the configure tap callback function you can create custom logic to pass or transform events to
@@ -181,6 +194,23 @@ export class EventGenerator<EventMap extends Record<string, Array<unknown>>> imp
     return () => {
       this.allEventListeners = this.allEventListeners.filter(l => l !== listener);
     };
+  }
+
+  public waitFor<K extends keyof EventMap>(
+    eventName: K,
+    predicate?: EventListener<EventMap[K], boolean>,
+  ): Promise<EventMap[K]> {
+    return new Promise<EventMap[K]>((resolve, reject) => {
+      const _predicate = predicate === undefined ? undefined : (...args: EventMap[K]): boolean => {
+        try {
+          return predicate(...args);
+        } catch (e) {
+          reject(e);
+          throw e;
+        }
+      };
+      this.once(eventName, (...args) => resolve(args), _predicate);
+    });
   }
 
   public emit<K extends keyof EventMap>(eventName: K, ...args: EventMap[K]): unknown[] {

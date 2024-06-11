@@ -190,6 +190,27 @@ describe('Event Emitter', () => {
       expect(mock).not.toHaveBeenCalled();
     });
   });
+  describe('WaitFor Functionality', () => {
+    it('should allow waiting for an event', async () => {
+      const emitter = new EventGenerator<ExampleEvents>();
+      const promise = emitter.waitFor('hello');
+      emitter.emit('hello', 'world');
+      expect(await promise).toStrictEqual(['world']);
+    });
+    it('should allow waiting for an event with a filter', async () => {
+      const emitter = new EventGenerator<ExampleEvents>();
+      const promise = emitter.waitFor('hello', (name) => name === 'world');
+      emitter.emit('hello', 'abc');
+      emitter.emit('hello', 'world');
+      expect(await promise).toStrictEqual(['world']);
+    });
+    it('should throw an error if the predicate throws an error', async () => {
+      const emitter = new EventGenerator<ExampleEvents>();
+      const promise = emitter.waitFor('hello', () => { throw Error('custom'); });
+      emitter.emit('hello', 'world');
+      await expect(promise).rejects.toThrow('custom');
+    });
+  });
   describe('Pipe Functionality', () => {
     type SourceEvents = { 'hello': [name: string], age: [number], something: [], extraSource: [] };
     type PipedEvents = { 'age': [number], 'hello': [name: string, counter: number], something: [], extraPipe: [] };
