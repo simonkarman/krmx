@@ -1,6 +1,6 @@
 import http from 'http';
 import { AddressInfo } from 'ws';
-import { createServer, Status, VERSION } from '../src';
+import { createServer, Server, Status, VERSION } from '../src';
 import { sleep, withCustomServer, withServer } from './server.test-utils';
 
 describe('Krmx Server', () => {
@@ -23,16 +23,15 @@ describe('Krmx Server', () => {
 
   it('should not be allowed to start listening on a server that is already listening',
     withServer(async ({ server }) => {
-      expect(() => server.listen()).toThrow('cannot start listening when the server is listening');
+      await expect(server.listen()).rejects.toThrow('cannot start listening when the server is listening');
     }),
   );
 
   it('should send messages to a custom logger if provided', async () => {
     const logger = jest.fn();
     const server = createServer({ logger });
-    server.listen();
-    await sleep();
-    server.close();
+    await server.listen();
+    await server.close();
     expect(logger).toHaveBeenCalledWith('info', expect.any(String));
   });
 
@@ -63,12 +62,11 @@ describe('Krmx Server', () => {
 
   it('should not be allowed to close a server that is not running', async () => {
     const server = createServer();
-    expect(() => server.close()).toThrow('cannot close when the server is initializing');
-    server.listen();
+    await expect(server.close()).rejects.toThrow('cannot close when the server is initializing');
+    await server.listen();
+    await server.close();
     await sleep();
-    server.close();
-    await sleep();
-    expect(() => server.close()).toThrow('cannot close when the server is closed');
+    await expect(server.close()).rejects.toThrow('cannot close when the server is closed');
   });
 
   it('should emit a listen event with the port once the server successfully started listening',
@@ -630,21 +628,19 @@ describe('Krmx Server', () => {
   it('should call listen on server even when provided http server is already listening', async () => {
     const httpServer = new http.Server();
     httpServer.listen();
+    let server: Server | undefined = undefined;
     try {
       await sleep();
-      const server = createServer({ http: { server: httpServer } });
-      expect(() => server.join('simon')).toThrow('cannot join a user when the server is initializing');
+      server = createServer({ http: { server: httpServer } });
+      expect(() => server?.join('simon')).toThrow('cannot join a user when the server is initializing');
       const httpServerPort = (httpServer.address() as AddressInfo).port;
-      expect(() => server.listen(httpServerPort + 1))
+      await expect(server.listen(httpServerPort + 1)).rejects
         .toThrow(`cannot start listening on port ${httpServerPort + 1} as the underlying http server is already listening on port ${httpServerPort}`);
-      await new Promise<number>((resolve) => {
-        server.on('listen', resolve);
-        server.listen();
-      });
-      expect(() => server.join('simon')).not.toThrow();
+      await server.listen();
+      expect(() => server?.join('simon')).not.toThrow();
     } finally {
       await new Promise<void>((resolve) => {
-        httpServer.on('close', resolve);
+        server?.on('close', resolve);
         httpServer.close();
       });
     }
