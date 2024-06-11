@@ -306,8 +306,15 @@ class ClientImpl extends EventGenerator<Events> implements Client {
       this.username = username;
       this.status = 'linking';
 
-      this.on('link', () => resolve()); // TODO: this.once instead of on
-      this.on('reject', (reason) => { reject(new Error(reason)); }); // TODO: this.once instead of on
+      const unsubLink = this.once('link', () => {
+        // eslint-disable-next-line no-use-before-define
+        unsubReject();
+        resolve();
+      });
+      const unsubReject = this.once('reject', (reason) => {
+        unsubLink();
+        reject(new Error(reason));
+      });
       this.socket?.send(JSON.stringify({ type: 'krmx/link', payload: { username, version: VERSION, auth } }));
     });
   }
@@ -317,11 +324,7 @@ class ClientImpl extends EventGenerator<Events> implements Client {
       this.canOnly('send', 'linked');
       this.status = 'unlinking';
 
-      this.on('unlink', (username) => { // TODO: this.once instead of on
-        if (username === this.username) {
-          resolve();
-        }
-      });
+      this.once('unlink', _ => resolve(), username => username === this.username);
       this.socket?.send(JSON.stringify({ type: 'krmx/unlink' }));
     });
   }
@@ -333,11 +336,7 @@ class ClientImpl extends EventGenerator<Events> implements Client {
 
       // Notice: even tho this is a 'leave' function, 'unlink' is correct here. This is because the 'unlink' event is the last we receive for
       //         ourselves. As after unlinking has taken place we will not receive any further messages, including the 'leave' message.
-      this.on('unlink', (username) => { // TODO: this.once instead of on
-        if (username === this.username) {
-          resolve();
-        }
-      });
+      this.once('unlink', _ => resolve(), username => username === this.username);
       this.socket?.send(JSON.stringify({ type: 'krmx/leave' }));
     });
   }
@@ -351,7 +350,7 @@ class ClientImpl extends EventGenerator<Events> implements Client {
       this.status = 'closing';
       this.username = undefined;
 
-      this.on('close', resolve); // TODO: this.once instead of on
+      this.once('close', resolve);
       this.socket?.close();
     });
   }

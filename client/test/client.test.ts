@@ -36,6 +36,7 @@ describe('createClient', () => {
       expect(client.getUsername()).toBe('simon');
       expect(client.getUsers()).toStrictEqual([{ username: 'simon', isLinked: true }]);
       await new Promise<void>((resolve, reject) => {
+        let messageReceivedInAll = false;
         server.on('message', (username, message) => {
           if (
             username === 'simon' &&
@@ -43,9 +44,25 @@ describe('createClient', () => {
             'payload' in message &&
             message.payload === 'Hello, universe!'
           ) {
-            resolve();
+            if (messageReceivedInAll) {
+              resolve();
+            } else {
+              reject('message not received in all first');
+            }
           } else {
             reject('invalid message received');
+          }
+        });
+        server.all((on, username, message) => {
+          if (
+            on === 'message' &&
+            username === 'simon' &&
+            typeof message === 'object' &&
+            message !== null &&
+            'payload' in message &&
+            message.payload === 'Hello, universe!'
+          ) {
+            messageReceivedInAll = true;
           }
         });
         client.send({ type: 'custom/message', payload: 'Hello, universe!' });
@@ -53,11 +70,21 @@ describe('createClient', () => {
       expect(() => client.send({ type: 'krmx/invalid' }))
         .toThrow('cannot send custom messages with type starting with the internal \'krmx/\' prefix');
       await new Promise<void>((resolve, reject) => {
+        let messageReceivedInAll = false;
         client.on('message', (message) => {
           if (message.type === 'custom/server-message') {
-            resolve();
+            if (messageReceivedInAll) {
+              resolve();
+            } else {
+              reject('message not received in all first');
+            }
           } else {
             reject('unexpected message from the server');
+          }
+        });
+        client.all((on, message) => {
+          if (on === 'message' && typeof message === 'object' && message !== null && 'type' in message && message.type === 'custom/server-message') {
+            messageReceivedInAll = true;
           }
         });
         server.send('simon', { type: 'custom/server-message' });
@@ -142,6 +169,38 @@ describe('createClient', () => {
       server.close();
     });
     expect(simon.getUsers().length).toBe(0);
+  });
+
+  it('should be able to retrieve a message once', async () => {
+    const server = createServer();
+    const portNumber = await new Promise<number>((resolve) => {
+      server.on('listen', resolve);
+      server.listen();
+    });
+    const client = createClient();
+    await client.connect(`ws://localhost:${portNumber}`);
+    await client.link('simon');
+    let count = 0;
+    await new Promise<void>((resolve, reject) => {
+      client.once('message', (message) => {
+        if (message.type === 'custom/once') {
+          count += 1;
+          resolve();
+        } else {
+          reject('unexpected message from the server');
+        }
+      });
+      server.send('simon', { type: 'custom/once' });
+      server.send('simon', { type: 'custom/once' });
+    });
+    await sleep(30);
+    expect(count).toBe(1);
+
+    await client.disconnect(true);
+    await new Promise<void>((resolve) => {
+      server.on('close', resolve);
+      server.close();
+    });
   });
 
   // TODO: Test for non-Krmx WebSocket server
