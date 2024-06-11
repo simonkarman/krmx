@@ -1,114 +1,108 @@
-import React, { ReactElement, useState } from 'react';
-import { act, create } from 'react-test-renderer';
-import { KrmxProvider, useKrmx } from '../src';
-import { createServer } from '@krmx/server';
+import { createServer, Server } from '@krmx/server';
+import React from 'react';
+import { act, create, ReactTestRenderer } from 'react-test-renderer';
+import { createReactClient } from '../src';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-global['WebSocket'] = require('ws');
-global['crypto'] = require('crypto');
-
-function MyApp(props: { serverUrl: string }): ReactElement {
-  return <KrmxProvider serverUrl={props.serverUrl}>
-    <MyComponent/>
-  </KrmxProvider>;
-}
-
-function MyComponent() {
-  const {
-    isConnected, reconnect,
-    username, isLinked, link, rejectionReason,
-    send, unlink, leave, users,
-    useMessages,
-  } = useKrmx();
-  const [counter, setCounter] = useState(0);
-  useMessages((message: unknown) => {
-    console.info('received', message);
-    setCounter(c => c + 1);
-  }, []);
-  if (!isConnected) {
-    // Your logic for when the app cannot connect to the server goes here
-    return <>
-      <h1>No connection to the server...</h1>
-      <button onClick={() => reconnect()}>Reconnect</button>
-    </>;
-  }
-  if (!isLinked) {
-    // Your logic for linking your connection to a user goes here
-    return <>
-      <h1>Login</h1>
-      <button onClick={() => link('simon')}>Join!</button>
-      {rejectionReason && <p>Rejected: {rejectionReason}</p>}
-    </>;
-  }
-  // Your app logic go goes here
-  return (<>
-    <h1>Welcome <strong>{username}</strong>!</h1>
-    <button onClick={() => send({ type: 'custom/hello' })}>Send custom/hello</button>
-    <button onClick={leave}>Leave</button>
-    <button onClick={unlink}>Unlink</button>
-    <p>You have received {counter} message(s) from the server.</p>
-    <h2>Users</h2>
-    <ul>
-      {Object.entries(users).map(([otherUsername, { isLinked }]) => <li key={otherUsername}>{isLinked ? '🟢' : '🔴'} {otherUsername}</li>)}
-    </ul>
-  </>);
-}
-
-describe('Client', () => {
-  it('useKrmx should be a function', () => {
-    expect(useKrmx).toStrictEqual(expect.any(Function));
-  });
-  it('useKrmx should show no connection when connection cannot be established', () => {
-    const myApp = create(<MyApp serverUrl='ws://localhost:1234' />);
-    expect(JSON.stringify(myApp.toJSON())).toMatchInlineSnapshot(
-      '"['
-        + '{"type":"h1","props":{},"children":["No connection to the server..."]},'
-        + '{"type":"button","props":{},"children":["Reconnect"]}'
-      + ']"',
-    );
-  });
-  it('useKrmx should connect to the server', async () => {
+function useTestBase(run: ((props: {
+  server: Server,
+  client: ReturnType<typeof createReactClient>['client'],
+  app: ReactTestRenderer,
+}) => Promise<void>)): () => Promise<void> {
+  return async () => {
+    // Setup server and client
     const server = createServer();
+    const { client, useKrmx } = createReactClient();
     try {
-      // Wait for server to start
-      const portNumber = await new Promise<number>((resolve) => {
-        server.on('listen', resolve);
-        server.listen();
-      });
-      const myApp = create(<MyApp serverUrl={'ws://localhost:' + (portNumber - 1)}/>);
+      const listenPromise = server.waitFor('listen');
+      server.listen();
+      const [port] = await listenPromise;
 
-      // Connect to server
-      await act(async () => {
-        myApp.update(<MyApp serverUrl={'ws://localhost:' + portNumber}/>);
-        await sleep(50);
-      });
-      expect(JSON.stringify(myApp.toJSON())).toMatchInlineSnapshot(
-        '"['
-        + '{"type":"h1","props":{},"children":["Login"]},'
-        + '{"type":"button","props":{},"children":["Join!"]}'
-        + ']"',
-      );
+      // Create component
+      const KrmxComponent = (props: { serverUrl: string, linkAs: string }) => {
+        const { status, username, users } = useKrmx();
+        if (['initializing', 'connecting', 'closing', 'closed'].includes(status)) {
+          return (<div>
+            <p>No connection to the server.</p>
+            <button onClick={() => client.connect(props.serverUrl)}>
+              Connect
+            </button>
+          </div>);
+        }
+        if (['connected', 'linking', 'unlinking'].includes(status)) {
+          return (<div>
+            <p>Connected to the server, but not yet linked.</p>
+            <button onClick={() => client.link(props.linkAs)}>Link as {props.linkAs}</button>
+            <button onClick={() => client.disconnect()}>Disconnect</button>
+          </div>);
+        }
+        return (<div>
+          <p>Hello, {username}. Users: {users.map(u => u.username).join(', ')}</p>
+          <button onClick={() => client.send({ type: 'custom/message', payload: 'hi, world!' })}>Send message</button>
+          <button onClick={() => client.unlink()}>Unlink</button>
+          <button onClick={() => client.leave()}>Leave</button>
+        </div>);
+      };
 
-      // Link!
-      await act(async () => {
-        myApp.root.findByType('button').props.onClick();
-        await sleep(20);
-      });
-      expect(JSON.stringify(myApp.toJSON())).toMatchInlineSnapshot(
-        '"[' +
-        '{"type":"h1","props":{},"children":["Welcome ",{"type":"strong","props":{},"children":["simon"]},"!"]},' +
-        '{"type":"button","props":{},"children":["Send custom/hello"]},{"type":"button","props":{},"children":["Leave"]},' +
-        '{"type":"button","props":{},"children":["Unlink"]},' +
-        '{"type":"p","props":{},"children":["You have received ","0"," message(s) from the server."]},' +
-        '{"type":"h2","props":{},"children":["Users"]},{"type":"ul","props":{},"children":[{"type":"li","props":{},"children":["🟢"," ","simon"]}]}' +
-        ']"',
-      );
+      // Render the component
+      const app = create(<KrmxComponent serverUrl={'ws://localhost:' + (port)} linkAs={'simon'}/>);
+      await run({ server, client, app });
+
+    } catch (e) {
+      console.error('error!', e);
     } finally {
-      await new Promise<void>((resolve) => {
-        server.on('close', resolve);
-        server.close();
-      });
+      // Close the client and server
+      if (!['initializing', 'closed'].includes(client.getStatus())) {
+        await client.disconnect(true);
+      }
+      const closePromise = server.waitFor('close');
+      server.close();
+      await closePromise;
     }
-  });
+  };
+}
+
+describe('Client React', () => {
+  it('should render KrmxComponent', useTestBase(async ({ app }): Promise<void> => {
+    expect(app.toJSON()).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          No connection to the server.
+        </p>
+        <button
+          onClick={[Function]}
+        >
+          Connect
+        </button>
+      </div>
+    `);
+
+    await act(async () => {
+      app.root.findByType('button').props.onClick();
+      await sleep(30);
+    });
+
+    expect(app.toJSON()).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          Connected to the server, but not yet linked.
+        </p>
+        <button
+          onClick={[Function]}
+        >
+          Link as 
+          simon
+        </button>
+        <button
+          onClick={[Function]}
+        >
+          Disconnect
+        </button>
+      </div>
+    `);
+
+    // Dismount to close the connection
+    await act(() => app.update(<></>));
+  }));
 });
