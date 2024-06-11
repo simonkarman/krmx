@@ -22,7 +22,7 @@
     "prepublishOnly": "npm install && npm run precommit"
   },
   "dependencies": {
-    "@krmx/base": "^0.5.2",
+    "@krmx/base": "^0.5.4",
     "immer": "^10.0.3"
   },
   "peerDependencies": {
