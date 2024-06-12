@@ -1,9 +1,9 @@
 import { Message } from '@krmx/base';
-import { createClient } from '@krmx/client';
+import { createClient as createKrmxClient } from '@krmx/client';
 import { createServer, Server } from '@krmx/server';
 import React from 'react';
 import { act, create, ReactTestInstance, ReactTestRenderer } from 'react-test-renderer';
-import { createClientReact } from '../src';
+import { createClient } from '../src';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 function buttonWithText(text: string) {
@@ -17,14 +17,14 @@ function buttonWithText(text: string) {
 
 function useTestBase(run: ((props: {
   server: Server,
-  client: ReturnType<typeof createClientReact>['client'],
+  client: ReturnType<typeof createClient>['client'],
   app: ReactTestRenderer,
   serverUrl: string,
 }) => Promise<void>)): () => Promise<void> {
   return async () => {
     // Setup server and client
     const server = createServer();
-    const { client, useKrmx } = createClientReact();
+    const { client, useClient } = createClient();
     try {
       const listenPromise = server.waitFor('listen');
       server.listen();
@@ -32,7 +32,7 @@ function useTestBase(run: ((props: {
 
       // Create component
       const KrmxComponent = (props: { serverUrl: string, linkAs: string }) => {
-        const { status, username, users } = useKrmx();
+        const { status, username, users } = useClient();
         if (['initializing', 'connecting', 'closing', 'closed'].includes(status)) {
           return (<div>
             <p>No connection to the server.</p>
@@ -153,7 +153,7 @@ describe('Client React', () => {
 
     // Link another user
     await act(async () => {
-      const lisa = createClient();
+      const lisa = createKrmxClient();
       await lisa.connect(serverUrl);
       await lisa.link('lisa');
       await lisa.disconnect(true);
