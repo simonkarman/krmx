@@ -4,6 +4,7 @@
 .npmignore
 jest.config.js
 tsconfig.json
+typedoc.json
 src/
 test/
 node_modules/
