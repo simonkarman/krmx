@@ -151,7 +151,7 @@ export type Client = {
 /**
  * The properties with which to create the Client.
  */
-interface Props {
+export interface Props {
   /**
    * The logger that the Client should use. If set to false, no logs will be emitted.
    *
