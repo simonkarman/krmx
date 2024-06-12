@@ -23,8 +23,7 @@
   },
   "dependencies": {
     "@krmx/base": "^0.5.4",
-    "@krmx/client": "^0.5.0",
-    "immer": "^10.0.3"
+    "@krmx/client": "^0.5.0"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0"
