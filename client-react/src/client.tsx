@@ -4,7 +4,7 @@ import { Client, createClient } from '@krmx/client';
 
 export type Listener = () => void;
 
-export const createReactClient = () => {
+export const createClientReact = () => {
   // Create client
   const client = createClient();
   client.all((eventName) => {
