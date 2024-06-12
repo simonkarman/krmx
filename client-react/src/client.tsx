@@ -1,10 +1,9 @@
-import { useSyncExternalStore } from 'react';
-import { Client, createClient, Props } from '@krmx/client';
-
-type Listener = () => void;
+import { useEffect, useSyncExternalStore } from 'react';
+import { Client, createClient as createKrmxClient, Props } from '@krmx/client';
+import { Listener } from './utils';
 
 /**
- * The state that is returned by the `useKrmx` hook.
+ * The state that is returned by the `useClient` hook.
  */
 export type ClientState = {
   status: ReturnType<Client['getStatus']>,
@@ -13,15 +12,15 @@ export type ClientState = {
 };
 
 /**
- * Create a client and a hook to use the Krmx Client in a React component.
+ * Create a client and a hook to get the Krmx Client status in a React component.
  *
- * @param props The properties with which to create the Client.
- * @returns An object with the Krmx Client (`client`) and a hook to use the Krmx Client in a React component (`useKrmx`).
+ * @param props The properties with which to create the Krmx Client.
+ * @returns An object with the Krmx Client (`client`) and a hook to use the Krmx Client in a React component (`useClient`).
  */
-export function createClientReact(props?: Props) {
+export function createClient(props?: Props) {
   // Create client
-  const client = createClient(props);
-  client.all((eventName) => {
+  const client = createKrmxClient(props);
+  const unsub = client.all((eventName) => {
     if (eventName !== 'message') { emit(); }
   });
 
@@ -49,8 +48,12 @@ export function createClientReact(props?: Props) {
     listeners.forEach(l => l());
   }
 
-  // Create useKrmx hook
-  const useKrmx = () => {
+  // Create useClient hook
+  const useClient = () => {
+    // Unsubscribe from the client when the component is unmounted
+    useEffect(() => unsub, []);
+
+    // Return the state as synced with the client
     return useSyncExternalStore(subscribe, () => state, () => ({
       status: 'initializing',
       users: [],
@@ -58,46 +61,9 @@ export function createClientReact(props?: Props) {
     } as ClientState));
   };
 
-  // Return the client and the useKrmx hook
+  // Return the client and the useClient hook
   return {
-    useKrmx,
     client,
+    useClient,
   };
 }
-
-// TODO: add this back in as a generic createReactClientStore store
-// export function createReactClientStore(client: Client) {
-//   return undefined;
-// }
-// export const createLatestMessagesStore = (client: Client, numberOfMessages: number) => {
-//   let listeners: Listener[] = [];
-//   type State = { id: string, message: Message }[];
-//   let state: State = [];
-//   let messages: { id: string, message: Message }[] = [];
-//   function emit() {
-//     state = [...messages];
-//     listeners.forEach(l => l());
-//   }
-//   function subscribe(listener: Listener) {
-//     listeners = [...listeners, listener];
-//     return () => {
-//       listeners = listeners.filter(l => l !== listener);
-//     };
-//   }
-//   client.on('message', (message) => {
-//     messages = [...messages, { id: crypto.randomUUID(), message }].slice(-numberOfMessages);
-//     emit();
-//   });
-//   const resetIfSelf = (username: string) => {
-//     if (username === client.getUsername()) {
-//       messages = [];
-//       emit();
-//     }
-//   };
-//   client.on('link', resetIfSelf);
-//   client.on('unlink', resetIfSelf);
-//   const useLatestKrmxMessages = () => {
-//     return useSyncExternalStore(subscribe, () => state, () => ([] as State));
-//   };
-//   return { useLatestKrmxMessages };
-// };
