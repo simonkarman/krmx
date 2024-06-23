@@ -1,6 +1,6 @@
 {
   "name": "@krmx/base",
-  "version": "0.5.4",
+  "version": "0.5.6",
   "main": "dist/src/index.js",
   "author": "Simon Karman",
   "contributors": [
