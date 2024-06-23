@@ -1,0 +1,164 @@
+# React Client API
+The Krmx React client implementation provides an external store that wraps the [Krmx Client](/krmx-api/client), so that it can be easily used in React and is written in TypeScript.
+
+Take a look at the [TypeScript SDK reference](/sdk/modules/Krmx_Client_for_React.html) and [source code](https://github.com/simonkarman/krmx/blob/main/client-react/src/client.tsx) to learn more about the React Client API.
+
+If you need help setting up a project with Krmx, then please following the instructions at [Getting Started](/getting-started).
+
+## Creating a new Krmx React Client
+The React client API provides a `createClient` method that creates an external store that wraps the Krmx Client. This store can be used in React components to access the Krmx Client.
+
+```tsx
+// in your utils/krmx.ts
+import { createClient } from '@krmx/client-react';
+
+// Create the client
+export const { client, useClient } = createClient(/* props */);
+```
+
+This returns an object with two fields: `client` and `useClient`. The `client` field is the Krmx Client instance, and the `useClient` field is a hook that can be used in React components to access the Krmx Client data.
+
+### Properties
+To create the client you can supply properties. The properties are the same as the properties of the Krmx Client and can be found in the [Krmx Client Props](/sdk/interfaces/Krmx_Client.Props.html) interface.
+
+## Using useClient hook
+The `useClient` hook makes the information from the Krmx protocol, such as unlinked and linked users, available to your React components.
+
+```tsx
+"use client";
+import { useClient } from '@/utils/krmx.ts';
+
+export default function MyApp() {
+  const { status, username, users } = useClient();
+  return (<>
+    <h1>My App</h1>
+    <p>The current status of the client: {status}</p>
+    <p>The username (if linked to a user): {username}</p>
+    <p>Users: {users.map(u => u.username).join()}</p>
+  </>);
+}
+```
+
+### Fields
+The hook returns an object with three fields, that expose part of this information. The `status`, `username`, and `users` fields are described below.
+
+#### Status
+The `status` field is of type [Client Status](/sdk/types/Krmx_Client.Status.html), indicates the current status of the Krmx client.
+
+#### Username
+The `username` field of type string or undefined. It is undefined when the connection is not linked to a user, and otherwise is the username to which the client is linked on the server.
+
+```tsx
+import { useClient } from '@/utils/krmx.ts';
+
+function MyComponent() {
+  const { username } = useClient();
+
+  if (username) {
+    return <p>Welcome, {username} 👋</p>;
+  } else {
+    return <p>You're not linked!</p>;
+  }
+}
+```
+
+#### Users
+The `users` field is an object, that indicates the users that are known to the servers and provides information about which are currently linked to a connection.
+
+The object has the following Type Definition `{ [username: string]: { isLinked: boolean} };`. Example of its structure
+
+```json
+{
+    "simon": { "isLinked": true },
+    "lisa": { "isLinked": true },
+    "rik": { "isLinked": false },
+}
+```
+
+Example usage of the users field.
+
+```tsx
+import { useClient } from '@/utils/krmx.ts';
+
+function UsersComponent() {
+  const { users } = useClient();
+  return <ul>
+     {Object.entries(users)
+       .map(([username, { isLinked }]) => (
+         <li key={username}>
+           {username}
+           {!isLinked && ' (disconnected)'}
+         </li>)
+       )}
+   </ul>;
+}
+```
+
+## Using the client
+The `client` field is the Krmx Client instance, and can be used to interact with the Krmx server.
+
+### Example: Connect
+Connect to a Krmx server by invoking the `connect` method on the client.
+
+```tsx
+import { client } from '@/utils/krmx.ts';
+
+export function MyComponent() {
+  return <button onClick={() => { client.connect('ws://localhost:8082'); }}>
+    Connect to Krmx server
+  </button>;
+}
+```
+
+For the `serverUrl` argument you have to provide the `ws://` or `wss://` url of the websocket endpoint where your Krmx server is running.
+
+For example: `ws://my-subdomain.example.org:3002/my-game` or `ws://localhost:1234`.
+
+### Krmx Client
+Since, the client is simply a wrapper around a Krmx Client, all its other methods can be found in the [Krmx API](/krmx-api/client). They can all be invoked similarly to the connect example above.
+
+
+## Creating a store
+If you want to use the messages from the Krmx Client in your React components, you can create a store that listens to the messages from the Krmx Client.
+
+To do this you can use the `createStore` method that creates a store that listens to the messages from the Krmx Client.
+
+The example below creates a store that listens to messages from the Krmx Client and stores the last 10 messages in the store.
+```tsx
+// add to your utils/krmx.ts
+import { createClient, createStore } from '@krmx/client-react';
+
+/* ... your existing code to create the client ... */
+export const { client, useClient } = createClient(/* props */);
+
+// Example Message Store
+export const useMessages = createStore(
+  /* the client to create the store for */
+  client,
+
+  /* the initial state of the store */
+  [] as { id: string, message: string }[],
+
+  /* a reducer returning the new state after each incoming messages */
+  (state, message) => [...state, { id: crypto.randomUUID(), message: message.type }].slice(-10),
+
+  /* a mapper that can map the state to a different format, which is what will be available when using the hook */
+  s => s
+);
+```
+
+Then you can use the `useMessages` hook in your components to access the messages from the Krmx Client.
+
+```tsx
+import { useMessages } from '@/utils/krmx.ts';
+
+export function MyComponent() {
+  const messages = useMessages();
+  return <ul>
+    {messages.map(m => <li key={m.id}>{m.message}</li>)}
+  </ul>;
+}
+```
+
+## TypeScript SDK Reference
+Take a look at the [TypeScript SDK reference](/sdk/modules/Krmx_Client.html) and [source code](https://github.com/simonkarman/krmx/blob/main/client/src/client.tsx) to learn more about the Client API.
