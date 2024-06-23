@@ -1,7 +1,7 @@
 # NodeJS Server API
 The Krmx server implementation is a NodeJS backend server and is written in TypeScript.
 
-> Take a look at the [TypeScript SDK reference](/sdk/modules/Krmx_Server.html) and [source code](https://github.com/simonkarman/krmx/blob/main/server/src/server.ts) to learn more about the Server API.
+Take a look at the [TypeScript SDK reference](/sdk/modules/Krmx_Server.html) and [source code](https://github.com/simonkarman/krmx/blob/main/server/src/server.ts) to learn more about the Server API.
 
 If you need help setting up a project with Krmx, then please following the instructions at [Getting Started](/getting-started).
 
@@ -65,7 +65,7 @@ server.unlink(username);
 See the [Server](/sdk/interfaces/Krmx_Server.Server.html) interface for more information about these methods.
 
 ### User Authentication
-Right before a user joins the server, the server emits an authenticate event with some information about the user. Within this listener you have the ability to reject the user.
+Right before a connection links to a user, the server emits an authenticate event with some information about the connection. Within this listener you have the ability to reject that connection from linking to the user.
 
 ```ts
 import { Server } from '@krmx/server';
@@ -122,7 +122,7 @@ server.on('link', (username) => {
 });
 ```
 
-You can find the explanation of each event type in [the event-based documentation](/learn/event-based#events) and in the [TypeScript SDK reference](/sdk/types/Krmx_Server.Events.html).
+You can find the explanation of each event type in [the event-based documentation](/learn/event-based) and in the [TypeScript SDK reference](/sdk/types/Krmx_Server.Events.html).
 
 ### Messages (from clients)
 When clients send messages, these will be emitted as a `message` event. You can listen to these message using the server's `on('message', <listener>)` method.
@@ -136,11 +136,42 @@ server.on('message', (username, message) => {
 });
 ```
 
-## Advanced Events Usage
-> Coming soon!
+### Advanced Usage
+You can use the event system to implement more advanced features.
+
+#### Example: Inactivity Timeouts
+In the below example, a user is kicked from the server if they have been offline (unlinked from a connection) for more than one minute.
+
+```ts
+import { Server } from '@krmx/server';
+declare const server: Server;
+
+const inactivitySeconds = 60;
+const inactivityTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
+const stopInactivityCountDown = (username: string) => {
+  if (inactivityTimeouts.has(username)) {
+    clearTimeout(inactivityTimeouts.get(username)!);
+    inactivityTimeouts.delete(username);
+  }
+}
+const startInactivityCountDown = (username: string) => {
+  inactivityTimeouts.set(username, setTimeout(() => {
+    console.info(`kicking ${username} due to being offline for too long`);
+    server.kick(username);
+  }, inactivitySeconds * 1000));
+}
+server.on('join', startInactivityCountDown);
+server.on('link', stopInactivityCountDown);
+server.on('unlink', startInactivityCountDown);
+server.on('leave', stopInactivityCountDown);
+```
+
+#### Example: More coming soon...
+> More coming soon!
 >
 > - Pipe `pipe<NextEventMap>(configureTap): EventEmitter<NextEventMap>;`
 > - Events TypeScript Type
+
 
 ## TypeScript SDK Reference
 Take a look at the [TypeScript SDK reference](/sdk/modules/Krmx_Server.html) and [source code](https://github.com/simonkarman/krmx/blob/main/server/src/server.ts) to learn more about the Server API.

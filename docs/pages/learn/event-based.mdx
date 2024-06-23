@@ -1,17 +1,14 @@
 # Event Based
-The key responsibility of Krmx is to abstract away the complexity of individual websocket connections and to create a simple event-based API describing joining and leaving of users and linking and unlinking of those users to their websocket connections. These events describe the lifecycle of a Krmx server application.
+The key responsibility of Krmx is to abstract away the complexity of individual websocket connections and to create a simple event-based API describing joining and leaving of users and linking and unlinking of those users to their websocket connections.
 
-*(TODO: add link to the Krmx server states once that documentation is written.)*
+Events describe the lifecycle of a Krmx application. The image provides an overview of all available events on the server side of Krmx: `listen`, `join`, `link`, `message`, `unlink`, `leave`, and `close`.
 
 <img className='rounded-lg border my-8 p-2 bg-gray-100 max-w-[95%] mx-auto' src='/krmx/assets/krmx-events.png' />
 
-An overview of all available events on the server side of Krmx: `listen`, `join`, `link`, `message`, `unlink`, `leave`, and `close`. *(TODO: add link to the Krmx server payloads of these events once that documentation is written.)*
+The 'join', 'link', 'unlink', and 'leave' events are propagated to all clients. This ensures that all clients are aware which users are known to the server and which of these users are currently linked to a connection. You can find more information about event API in the [Krmx API](/krmx-api) documentation.
 
-> The 'join', 'link', 'unlink', and 'leave' events are propagated to all clients. This ensure that all clients are aware which (other)user sessions are participating in the server and which of these users are currently linked to a connection.
-
-> Most of the event-based API is available on both the server side and client side. The documentation focuses on the server side events. *(TODO: add link to client side api once it is written.)*
-
-## Events
+## Server Side Events
+The server side of Krmx emits events. These events are emitted whenever it is listening for connections, a user joins, a connection links to a user, a connection unlinks from a user, a user leaves, a user sends a messages, and when the server closes.
 
 ### 1. `listen` event
 First, the server needs to start. Once the server has started, a `listen` event is emitted to indicate that it is ready to accept (aka listen to) incoming websocket connections.
@@ -41,3 +38,20 @@ When a user leaves, 'unlink' and 'leave' events are emitted in that order.
 
 ### 5. `close` event
 When the server wants to shut down, it will first stop accepting new connections. Then, all users will be kicked (see `unlink` and `leave` events for more information on kicking of users). Finally, once all users have been kicked the server will close. Once the server has closed, a `close` event is emitted to indicate that it is no longer accepting new connections.
+
+## Client Side Events
+The client side of Krmx emits events. These events are emitted whenever the client has connected to a server, the server connection is closed, the client has been accepted to link to a user, the client has been rejected to link to a user, a user has joined, a connection has linked to a user, a connection has unlinked from a user, a user has left, and the server has sent a message to the client.
+
+### 1. `connect` and `close` events
+First, the client needs to connect to a server. Once the client has connected to the server, a `connect` event is emitted to indicate that the client has successfully connected to the server. When the client connection is closed, a `close` event is emitted to indicate that the connection to the server has closed.
+
+### 2. `accept` and `reject` events
+After the client has connected to the server, it can link to a user. If the server accepts the client to link to a user, an `accept` event is emitted. If the server rejects the client to link to a user, a `reject` event is emitted with a reason why the client was rejected.
+
+### 3. `join`, `link`, `unlink`, and `leave` events
+Every time a user joins the server, a `join` event is emitted to indicate that a new user has joined the server. Every time a connection links to a user, a `link` event is emitted to indicate that a connection has linked to a user. Every time a connection unlinks from a user, an `unlink` event is emitted to indicate that a connection has unlinked from a user. Every time a user leaves the server, a `leave` event is emitted to indicate that a user has left the server.
+
+Note that a client will never receive a `leave` event for itself as it has already unlinked by the time the `leave` event is broadcast by the server.
+
+### 4. `message` event
+Every time the server sends a message to the client, a `message` event is emitted to indicate that the server has sent a message to the client.

@@ -16,7 +16,7 @@ import {
  *                              be in during normal use.
  * @description *unlinking*:    The client is in the process of unlinking from a user.
  * @description *closing*:      The client is in the process of leaving or disconnecting from the server.
- * @description *closed*:       The client has no closed.
+ * @description *closed*:       The client has closed its connection to the server.
  */
 export type Status = 'initializing' | 'connecting' | 'connected' | 'linking' | 'linked' | 'unlinking' | 'closing' | 'closed';
 

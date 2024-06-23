@@ -1,7 +1,7 @@
 # Limitations
 While Krmx offers a powerful toolkit for addressing multi-user realtime bi-directional messaging, it's essential to recognize that it is not the right solution for all use cases. Krmx has its own strengths and limitations.
 
-To avoid unsuitable scenarios where Krmx can lead to unnecessary increased complexity of your application, it is important to understand these limitations of Krmx in the context of its architecture, maintenance and features.
+To avoid unsuitable scenarios where Krmx can lead to unnecessary increased complexity of your application, it is important to understand the limitations of Krmx in the context of its architecture, maintenance and features.
 
 ## Architecture
 
@@ -17,18 +17,15 @@ Krmx does not include a default state management implementation. However, users 
 Krmx is currently maintained by a single individual. This means that updates and feature releases may be subject to the availability and priorities of a sole maintainer.
 
 ### No Stable Release
-As of now, Krmx has not reached a stable v1.0 release. Users should be aware that while the library is actively developed, changes that introduce breaking modifications or new features may occur until a stable release is reached.
+As of now, Krmx has not reached a stable v1.0 release. Users should be aware that while the library is under active development, changes that introduce breaking modifications or new features may occur until a stable release is reached.
 
 ### Limited to NodeJS and React
 While Krmx offers TypeScript implementations tailored for NodeJS and React environments, users seeking support for other programming languages or frameworks may need to implement their own solutions.
 
 ### Not Battle-Tested
-Although the Krmx server implementation in TypeScript has 100% unittest coverage, the client does not. Moreover, not all real world scenarios regarding packet loss and connections dropping have been observed and or tested. Using Krmx successfully in your environment may vary depending on individual circumstances.
+Although the Krmx server and client implementations in TypeScript have great unittest coverage and have been tested in multiple smaller projects by its maintainer. Not all real world scenarios regarding packet loss and connections dropping have been observed and or tested. Using Krmx successfully in your environment may vary depending on individual circumstances.
 
 ## Features
-
-### Authentication
-Krmx lacks support for handling authentication of incoming WebSocket connections. Currently, this has to be implemented on top of Krmx by the developer.
 
 ### No Transport Mode Fallback
 Krmx lacks built-in fallback mechanisms to alternative transport modes in cases where WebSocket connections are unavailable, either due to browser limitations or network firewalls. This may pose challenges for applications operating in restrictive network environments.
