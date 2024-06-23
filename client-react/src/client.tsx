@@ -1,14 +1,21 @@
-import { useEffect, useSyncExternalStore } from 'react';
-import { Client, createClient as createKrmxClient, Props } from '@krmx/client';
+import { useSyncExternalStore } from 'react';
+import { User } from '@krmx/base';
+import { createClient as createKrmxClient, Props, Status } from '@krmx/client';
 import { Listener } from './utils';
 
 /**
  * The state that is returned by the `useClient` hook.
  */
 export type ClientState = {
-  status: ReturnType<Client['getStatus']>,
-  users: ReturnType<Client['getUsers']>,
-  username: ReturnType<Client['getUsername']>,
+  status: Status,
+  users: User[],
+  username: string | undefined,
+};
+
+const snapshot: ClientState = {
+  status: 'initializing',
+  users: [],
+  username: undefined,
 };
 
 /**
@@ -20,7 +27,7 @@ export type ClientState = {
 export function createClient(props?: Props) {
   // Create client
   const client = createKrmxClient(props);
-  const unsub = client.all((eventName) => {
+  client.all((eventName) => {
     if (eventName !== 'message') { emit(); }
   });
 
@@ -49,16 +56,9 @@ export function createClient(props?: Props) {
   }
 
   // Create useClient hook
-  const useClient = () => {
-    // Unsubscribe from the client when the component is unmounted
-    useEffect(() => unsub, []);
-
+  const useClient = (): ClientState => {
     // Return the state as synced with the client
-    return useSyncExternalStore(subscribe, () => state, () => ({
-      status: 'initializing',
-      users: [],
-      username: undefined,
-    } as ClientState));
+    return useSyncExternalStore(subscribe, () => state, () => snapshot);
   };
 
   // Return the client and the useClient hook
