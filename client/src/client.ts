@@ -270,6 +270,7 @@ class ClientImpl extends EventGenerator<Events> implements Client {
       break;
     case 'krmx/joined':
       this.users[krmxMessage.payload.username] = { isLinked: false };
+      this.emit('join', krmxMessage.payload.username);
       break;
     case 'krmx/linked':
       this.users[krmxMessage.payload.username].isLinked = true;

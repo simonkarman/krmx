@@ -1,3 +1,4 @@
+import { User } from '@krmx/base';
 import { createServer } from '@krmx/server';
 import { createClient } from '../src';
 
@@ -171,6 +172,56 @@ describe('createClient', () => {
     expect(simon.getUsers().length).toBe(0);
   });
 
+  it('should be able to receive another client if that client joined and unlinked while the client was unlinked', async () => {
+    const server = createServer();
+    const portNumber = await server.listen();
+
+    // Join and disconnect Simon
+    const simon = createClient();
+    await simon.connect(`ws://localhost:${portNumber}`);
+    await simon.link('simon');
+    await simon.disconnect(true);
+    await sleep(20);
+    expect(server.getUsers()).toContainEqual<User>({ username: 'simon', isLinked: false });
+
+    // Join Lisa (showing a disconnected Simon)
+    const lisa = createClient();
+    await lisa.connect(`ws://localhost:${portNumber}`);
+    await lisa.link('lisa');
+    await sleep(20);
+    expect(lisa.getUsers()).toContainEqual<User>({ username: 'simon', isLinked: false });
+    expect(lisa.getUsers()).toContainEqual<User>({ username: 'lisa', isLinked: true });
+    expect(server.getUsers()).toContainEqual<User>({ username: 'simon', isLinked: false });
+    expect(server.getUsers()).toContainEqual<User>({ username: 'lisa', isLinked: true });
+
+    // Disconnect Lisa
+    await lisa.disconnect(true);
+    await sleep(20);
+    expect(server.getUsers()).toContainEqual<User>({ username: 'simon', isLinked: false });
+    expect(server.getUsers()).toContainEqual<User>({ username: 'lisa', isLinked: false });
+
+    // Connect Simon and verify that Lisa is shown as unlinked
+    await simon.connect(`ws://localhost:${portNumber}`);
+    await simon.link('simon');
+    await sleep(20);
+    expect(server.getUsers()).toContainEqual<User>({ username: 'simon', isLinked: true });
+    expect(server.getUsers()).toContainEqual<User>({ username: 'lisa', isLinked: false });
+    expect(simon.getUsers()).toContainEqual<User>({ username: 'simon', isLinked: true });
+    expect(simon.getUsers()).toContainEqual<User>({ username: 'lisa', isLinked: false });
+
+    // Server side join Rik and verify Rik is shown to Simon
+    const joinPromise = new Promise<string>((resolve) => simon.once('join', resolve));
+    server.join('rik');
+    await sleep(20);
+    expect(simon.getUsers()).toContainEqual<User>({ username: 'rik', isLinked: false });
+    const joiner = await joinPromise;
+    expect(joiner).toBe('rik');
+
+    // Disconnect all
+    await simon.disconnect(true);
+    await server.close();
+  });
+
   it('should be able to retrieve a message once', async () => {
     const server = createServer();
     const portNumber = await new Promise<number>((resolve) => {
@@ -203,6 +254,7 @@ describe('createClient', () => {
     });
   });
 
+  // TODO: Verify all events are emitted by the client
   // TODO: Test for non-Krmx WebSocket server
   // TODO: Test for version mismatch with Krmx server
   // TODO: Test for when connection is lost

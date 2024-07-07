@@ -1,6 +1,6 @@
 {
   "name": "@krmx/client-react",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "main": "dist/src/index.js",
   "author": "Simon Karman",
   "contributors": [
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@krmx/base": "^0.5.6",
-    "@krmx/client": "^0.5.2"
+    "@krmx/client": "^0.5.3"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0"
