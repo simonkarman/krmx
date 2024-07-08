@@ -1,8 +1,8 @@
 import { User } from '@krmx/base';
 import { createServer } from '@krmx/server';
-import { createClient } from '../src';
+import { createClient, Status, Events } from '../src';
 
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+const sleep = (ms = 20) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 describe('createClient', () => {
   it('should be able to connect and link to and unlink from a user and disconnect from a Krmx server', async () => {
@@ -95,7 +95,7 @@ describe('createClient', () => {
       await client.unlink();
       expect(client.getUsers().length).toBe(0);
       await client.link('lisa', 'secret');
-      expect(client.getUsers()).toStrictEqual([{ username: 'simon', isLinked: false }, { username: 'lisa', isLinked: true }]);
+      expect(client.getUsers()).toStrictEqual([{ username: 'lisa', isLinked: true }, { username: 'simon', isLinked: false }]);
       await client.leave();
       expect(client.getUsers().length).toBe(0);
       expect(client.getStatus()).toBe('connected');
@@ -138,26 +138,26 @@ describe('createClient', () => {
 
     // Another client is linked as lisa
     await otherClient.link('lisa');
-    await sleep(20);
+    await sleep();
     expect(simon.getUsers().length).toStrictEqual(2);
     expect(simon.getUsers()).toContainEqual({ username: 'lisa', isLinked: true });
 
     // Lisa has unlinked (but did not leave)
     await otherClient.unlink();
-    await sleep(20);
+    await sleep();
     expect(simon.getUsers().length).toStrictEqual(2);
     expect(simon.getUsers()).toContainEqual({ username: 'lisa', isLinked: false });
 
     // Marjolein links
     await otherClient.link('marjolein');
-    await sleep(20);
+    await sleep();
     expect(simon.getUsers().length).toStrictEqual(3);
     expect(simon.getUsers()).toContainEqual({ username: 'lisa', isLinked: false });
     expect(simon.getUsers()).toContainEqual({ username: 'marjolein', isLinked: true });
 
     // Marjolein leaves
     await otherClient.leave();
-    await sleep(20);
+    await sleep();
     expect(simon.getUsers().length).toStrictEqual(2);
     expect(simon.getUsers()).toContainEqual({ username: 'simon', isLinked: true });
     expect(simon.getUsers()).toContainEqual({ username: 'lisa', isLinked: false });
@@ -181,14 +181,14 @@ describe('createClient', () => {
     await simon.connect(`ws://localhost:${portNumber}`);
     await simon.link('simon');
     await simon.disconnect(true);
-    await sleep(20);
+    await sleep();
     expect(server.getUsers()).toContainEqual<User>({ username: 'simon', isLinked: false });
 
     // Join Lisa (showing a disconnected Simon)
     const lisa = createClient();
     await lisa.connect(`ws://localhost:${portNumber}`);
     await lisa.link('lisa');
-    await sleep(20);
+    await sleep();
     expect(lisa.getUsers()).toContainEqual<User>({ username: 'simon', isLinked: false });
     expect(lisa.getUsers()).toContainEqual<User>({ username: 'lisa', isLinked: true });
     expect(server.getUsers()).toContainEqual<User>({ username: 'simon', isLinked: false });
@@ -196,14 +196,14 @@ describe('createClient', () => {
 
     // Disconnect Lisa
     await lisa.disconnect(true);
-    await sleep(20);
+    await sleep();
     expect(server.getUsers()).toContainEqual<User>({ username: 'simon', isLinked: false });
     expect(server.getUsers()).toContainEqual<User>({ username: 'lisa', isLinked: false });
 
     // Connect Simon and verify that Lisa is shown as unlinked
     await simon.connect(`ws://localhost:${portNumber}`);
     await simon.link('simon');
-    await sleep(20);
+    await sleep();
     expect(server.getUsers()).toContainEqual<User>({ username: 'simon', isLinked: true });
     expect(server.getUsers()).toContainEqual<User>({ username: 'lisa', isLinked: false });
     expect(simon.getUsers()).toContainEqual<User>({ username: 'simon', isLinked: true });
@@ -212,7 +212,7 @@ describe('createClient', () => {
     // Server side join Rik and verify Rik is shown to Simon
     const joinPromise = new Promise<string>((resolve) => simon.once('join', resolve));
     server.join('rik');
-    await sleep(20);
+    await sleep();
     expect(simon.getUsers()).toContainEqual<User>({ username: 'rik', isLinked: false });
     const joiner = await joinPromise;
     expect(joiner).toBe('rik');
@@ -244,14 +244,98 @@ describe('createClient', () => {
       server.send('simon', { type: 'custom/once' });
       server.send('simon', { type: 'custom/once' });
     });
-    await sleep(30);
+    await sleep();
     expect(count).toBe(1);
 
     await client.disconnect(true);
-    await new Promise<void>((resolve) => {
-      server.on('close', resolve);
-      server.close();
-    });
+    await server.close();
+  });
+
+  it('verify all events are emitted by the client', async () => {
+    type State = [Status, string | undefined, User[], ...unknown[]];
+    const server = createServer();
+    const client = createClient();
+    const portNumber = await server.listen();
+    const capture = (eventName: keyof Events) => new Promise((resolve: (state: State) => void) => client.once(eventName, (...args) => {
+      resolve([client.getStatus(), client.getUsername(), client.getUsers(), ...args]);
+    }));
+
+    // Capture all
+    const connectingCapture = capture('connecting');
+    const connectCapture = capture('connect');
+    const closeCapture = capture('close');
+    const closingCapture = capture('closing');
+    const acceptCapture = capture('accept');
+    const rejectCapture = capture('reject');
+    const joinCapture = capture('join');
+    const linkCapture = capture('link');
+    const linkingCapture = capture('linking');
+    const unlinkCapture = capture('unlink');
+    const unlinkingCapture = capture('unlinking');
+    const leaveCapture = capture('leave');
+    const messageCapture = capture('message');
+
+    // Run through all logic
+    await client.connect(`ws://localhost:${portNumber}`);
+    try { await client.link('inv#lid'); } catch (e) { /* ignore */ }
+    await client.link('simon');
+    server.join('lisa');
+    server.send('simon', { type: 'custom/message', payload: 'Hello, world!' });
+    await sleep();
+    server.kick('lisa');
+    await sleep();
+    await client.unlink();
+    await client.disconnect();
+
+    // Wait for captures
+    const [
+      connecting,
+      connect,
+      close,
+      closing,
+      accept,
+      reject,
+      join,
+      link,
+      linking,
+      unlink,
+      unlinking,
+      leave,
+      message,
+    ] = await Promise.all([
+      connectingCapture,
+      connectCapture,
+      closeCapture,
+      closingCapture,
+      acceptCapture,
+      rejectCapture,
+      joinCapture,
+      linkCapture,
+      linkingCapture,
+      unlinkCapture,
+      unlinkingCapture,
+      leaveCapture,
+      messageCapture,
+    ]);
+
+    // Verify captures
+    expect(connecting).toStrictEqual(['connecting', undefined, []]);
+    expect(connect).toStrictEqual(['connected', undefined, []]);
+    expect(close).toStrictEqual(['closed', undefined, []]);
+    expect(closing).toStrictEqual(['closing', undefined, []]);
+    expect(accept).toStrictEqual(['linked', 'simon', [{ username: 'simon', isLinked: true }]]);
+    expect(reject).toStrictEqual(['connected', undefined, [], 'invalid username']);
+    expect(join).toStrictEqual(['linked', 'simon', [{ username: 'simon', isLinked: true }], 'simon']);
+    expect(link).toStrictEqual(['linked', 'simon', [{ username: 'simon', isLinked: true }], 'simon']);
+    expect(linking).toStrictEqual(['linking', 'inv#lid', []]);
+    expect(unlink).toStrictEqual(['connected', 'simon', [], 'simon']);
+    expect(unlinking).toStrictEqual(['unlinking', 'simon', [{ username: 'simon', isLinked: true }]]);
+    expect(leave).toStrictEqual(['linked', 'simon', [{ username: 'simon', isLinked: true }], 'lisa']);
+    expect(message).toStrictEqual(['linked', 'simon', [{ username: 'simon', isLinked: true }, { username: 'lisa', isLinked: false }],
+      { type: 'custom/message', payload: 'Hello, world!' }]);
+
+    // Clean up
+    await server.close();
   });
 
   // TODO: Verify all events are emitted by the client
