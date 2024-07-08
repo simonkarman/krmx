@@ -25,6 +25,11 @@ export type Status = 'initializing' | 'connecting' | 'connected' | 'linking' | '
  */
 export type Events = {
   /**
+   * This event is emitted once the client starts connecting to the server.
+   */
+  connecting: [];
+
+  /**
    * This event is emitted once the client has connected to the server.
    */
   connect: [];
@@ -33,6 +38,11 @@ export type Events = {
    * This event is emitted once the connection to the server has closed.
    */
   close: [];
+
+  /**
+   * This event is emitted once the connection to the server is closing.
+   */
+  closing: [];
 
   /**
    * This event is emitted when the client has been accepted to link to a user.
@@ -59,6 +69,11 @@ export type Events = {
   link: [username: string];
 
   /**
+   * This event is emitted once the client starts linking to a user.
+   */
+  linking: [];
+
+  /**
    * This event is emitted every time a connection has unlinked from its user.
    *
    * @param username The username of the user that was unlinked from its connection.
@@ -66,9 +81,14 @@ export type Events = {
   unlink: [username: string];
 
   /**
+   * This event is emitted once the client starts unlinking from its user.
+   */
+  unlinking: [];
+
+  /**
    * This event is emitted every time a user has left.
    *
-   * Note: A client will never receive a leave event for itself as it has already unlink by the time the leave event is emitted.
+   * Note: A client will never receive a leave event for itself as it has already unlinked by the time the leave event is emitted.
    *
    * @param username The username of the user that left.
    */
@@ -205,6 +225,7 @@ class ClientImpl extends EventGenerator<Events> implements Client {
     return new Promise<void>((resolve, reject) => {
       this.canOnly('connect', ['initializing', 'closed']);
       this.status = 'connecting';
+      this.emit('connecting');
 
       this.socket = new WebSocket(serverUrl);
       this.socket.onmessage = (rawMessage) => {
@@ -265,11 +286,15 @@ class ClientImpl extends EventGenerator<Events> implements Client {
       break;
     case 'krmx/accepted':
       this.status = 'linked';
-      this.users = {};
+      this.users = {
+        [this.username!]: { isLinked: true },
+      };
       this.emit('accept');
       break;
     case 'krmx/joined':
-      this.users[krmxMessage.payload.username] = { isLinked: false };
+      this.users[krmxMessage.payload.username] = {
+        isLinked: krmxMessage.payload.username === this.username,
+      };
       this.emit('join', krmxMessage.payload.username);
       break;
     case 'krmx/linked':
@@ -306,6 +331,7 @@ class ClientImpl extends EventGenerator<Events> implements Client {
       this.canOnly('link', 'connected');
       this.username = username;
       this.status = 'linking';
+      this.emit('linking');
 
       const unsubLink = this.once('link', () => {
         // eslint-disable-next-line no-use-before-define
@@ -324,6 +350,7 @@ class ClientImpl extends EventGenerator<Events> implements Client {
     return new Promise((resolve) => {
       this.canOnly('send', 'linked');
       this.status = 'unlinking';
+      this.emit('unlinking');
 
       this.once('unlink', _ => resolve(), username => username === this.username);
       this.socket?.send(JSON.stringify({ type: 'krmx/unlink' }));
@@ -334,6 +361,7 @@ class ClientImpl extends EventGenerator<Events> implements Client {
     return new Promise<void>((resolve) => {
       this.canOnly('leave', 'linked');
       this.status = 'connected';
+      this.emit('unlinking');
 
       // Notice: even tho this is a 'leave' function, 'unlink' is correct here. This is because the 'unlink' event is the last we receive for
       //         ourselves. As after unlinking has taken place we will not receive any further messages, including the 'leave' message.
@@ -350,6 +378,7 @@ class ClientImpl extends EventGenerator<Events> implements Client {
       ]);
       this.status = 'closing';
       this.username = undefined;
+      this.emit('closing');
 
       this.once('close', resolve);
       this.socket?.close();
