@@ -41,6 +41,7 @@ export function createStore<State, ExternalState = State>(
       emit();
     }
   };
+  client.on('link', resetIfSelf);
   client.on('unlink', resetIfSelf);
 
   // Allow the state to be altered once messages are received
