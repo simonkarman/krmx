@@ -1,0 +1,27 @@
+Krmx Board
+--
+Krmx Board provides three fundamental models that can be used to build Krmx applications. A models describe how shared state can be represented on server and client and how changes to that state can be made from clients.
+
+The three models are: Value, Stream, and View.
+
+Value Model (value/)
+* supports a single number, string, or boolean as the value
+* each client can update the value (value/set)
+* the server broadcasts the updated value to each client (value/set)
+* each client sees the latest broadcast value
+
+Stream Model (stream/)
+* supports a state derived from a stream of JSON serializable events
+* when a client joins it receives all previously send events in the stream (stream/history)
+* each client can append events to the stream (stream/append)
+* the server validates appended events and broadcasts the valid events to each client (stream/append)
+* each client sees the latest derived state based on the stream of events
+* each client keeps track of the events it has send but have not yet been verified by the server to create an optimistic state -- the server will send a rejection back to a client to allow a client to remove a invalid event from its optimistic stream (stream/invalidate)
+
+View Model (view/)
+* on the server side supports an internal and private state
+* on the client side supports a view on the private state that is updated through delta on that view after state changes
+* when a client joins it gets its full view send as a JSON object (view/full)
+* each client can send actions to the server (view/action)
+* the server validates actions and computes the new view for each client and sends the delta from previous to new view (view/delta)
+* each client keeps track of its optimistic state by applying any actions it sends using a optimistic handler immediately to its own view locally -- if the server receives an action that is invalid, or that adds no delta, this action should still be invalidated from the optimistic actions for that client, the server sends a message for this (view/invalidate)

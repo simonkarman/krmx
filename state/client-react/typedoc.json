@@ -1,0 +1,5 @@
+{
+  "name": "Krmx State Client React",
+  "includeVersion": true,
+  "entryPoints": ["./src/index.ts"]
+}

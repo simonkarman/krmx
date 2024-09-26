@@ -1,0 +1,5 @@
+{
+  "name": "Krmx State Base",
+  "includeVersion": true,
+  "entryPoints": ["./src/index.ts"]
+}

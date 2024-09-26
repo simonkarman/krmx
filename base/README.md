@@ -1,4 +1,4 @@
-# @krmx/client
+# @krmx/base
 The base classes required by the Krmx Server and Krmx Client implementations written in TypeScript. Krmx is a network protocol for realtime multi-user interactions. You can find the documentation of Krmx [here](https://simonkarman.github.io/krmx).
 
 ```bash
