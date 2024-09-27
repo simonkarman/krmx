@@ -1,7 +1,7 @@
 import { Message } from '@krmx/base';
 
 /**
- * Representation of an atomic value. It can be a string, number, or boolean.
+ * Representation of an Atom. It can be a string, number, or boolean.
  */
 export type Atom = string | number | boolean;
 
@@ -25,21 +25,21 @@ export const parseAtom = (input: string): Atom => {
 };
 
 /**
- * A message to set an Atom to a specific value.
+ * A message to set an Atom .
  */
-export type AtomSetMessage = { type: 'value/set', payload: { key: string, value: Atom } };
+export type AtomSetMessage = { type: 'atom/set', payload: { key: string, atom: Atom } };
 
 /**
- * Check if a message is a ValueSetMessage.
+ * Check if a message is a AtomSetMessage.
  *
  * @param message The message to check.
  */
 export const isAtomSetMessage = (message: Message): message is AtomSetMessage => {
-  return message.type === 'value/set'
+  return message.type === 'atom/set'
     && typeof message.payload === 'object'
     && message.payload !== null
     && 'key' in message.payload
     && typeof message.payload.key === 'string'
-    && 'value' in message.payload
-    && (typeof message.payload.value === 'string' || typeof message.payload.value === 'number' || typeof message.payload.value === 'boolean');
+    && 'atom' in message.payload
+    && (typeof message.payload.atom === 'string' || typeof message.payload.atom === 'number' || typeof message.payload.atom === 'boolean');
 };

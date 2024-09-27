@@ -3,8 +3,8 @@
   "version": "0.5.0",
   "description": "Krmx is a network protocol for realtime multi-user interactions",
   "scripts": {
-    "install-all": "npm install && npm --prefix base install && npm --prefix server install && npm --prefix client install && npm --prefix client-react install && npm --prefix docs install",
-    "precommit": "npm run --prefix base precommit && npm run --prefix server precommit && npm run --prefix client precommit && npm run --prefix client-react precommit && npm run --prefix docs precommit"
+    "postinstall": "npm --prefix base install && npm --prefix server install && npm --prefix client install && npm --prefix client-react install && npm --prefix state install && npm --prefix docs install",
+    "precommit": "npm run --prefix base precommit && npm run --prefix server precommit && npm run --prefix client precommit && npm run --prefix client-react precommit && npm run --prefix state precommit && npm run --prefix docs precommit"
   },
   "author": "Simon Karman",
   "license": "ISC",

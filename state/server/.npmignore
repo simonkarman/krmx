@@ -1,0 +1,11 @@
+.eslintignore
+.eslintrc.yml
+.gitignore
+.npmignore
+jest.config.js
+tsconfig.json
+src/
+test/
+node_modules/
+coverage/
+dist/test/
