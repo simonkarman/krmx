@@ -1,41 +1,41 @@
 import { Message } from '@krmx/base';
 
 /**
- * Representation of a sync-able value. It can be a string, number, or boolean.
+ * Representation of an atomic value. It can be a string, number, or boolean.
  */
-export type Value = string | number | boolean;
+export type Atom = string | number | boolean;
 
 /**
- * Convert a string value to a value.
+ * Parse a string to an atom (boolean, number or string).
  *  'abc' -> string
  *  '123' -> number
  *  'true' -> true
  *
- * @param value The value to convert.
+ * @param input The input string to parse.
  */
-export const toValue = (value: string): Value => {
-  if (value === 'true') {
+export const parseAtom = (input: string): Atom => {
+  if (input === 'true') {
     return true;
   }
-  if (value === 'false') {
+  if (input === 'false') {
     return false;
   }
-  const number = Number(value);
-  return isNaN(number) ? value : number;
+  const number = Number(input);
+  return isNaN(number) ? input : number;
 };
 
 /**
- * A message to set a synced value.
+ * A message to set an Atom to a specific value.
  */
-export type ValueSetMessage = { type: 'value/set', payload: { key: string, value: Value } };
+export type AtomSetMessage = { type: 'value/set', payload: { key: string, value: Atom } };
 
 /**
  * Check if a message is a ValueSetMessage.
  *
  * @param message The message to check.
  */
-export const isValueSetMessage = (message: Message): message is ValueSetMessage => {
-  return message.type === 'sv/set'
+export const isAtomSetMessage = (message: Message): message is AtomSetMessage => {
+  return message.type === 'value/set'
     && typeof message.payload === 'object'
     && message.payload !== null
     && 'key' in message.payload
