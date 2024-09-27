@@ -14,7 +14,7 @@ export interface StreamAppendMessage {
  * @param message The message to check.
  */
 export const isStreamAppendMessage = (message: Message): message is StreamAppendMessage => {
-  return message.type === 'es/event'
+  return message.type === 'stream/append'
     && typeof message.payload === 'object'
     && message.payload !== null
     && 'domain' in message.payload

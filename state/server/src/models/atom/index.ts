@@ -21,14 +21,14 @@ type RegisterAtomModelProps = {
 };
 
 /**
- * Register the atom model to the server.
+ * Register all atoms to the server.
  *
  * @param server The server to register the atom model on.
  * @param props The properties to configure the atom model.
  *
  * @returns An object with methods to unregister the model and to get and set atoms.
  */
-export const registerAtomModel = (server: Server, props: RegisterAtomModelProps) => {
+export const registerAtoms = (server: Server, props: RegisterAtomModelProps) => {
   // Keep track of the atoms.
   let atoms: { [key: string]: Atom } = {};
 
