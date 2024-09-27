@@ -20,7 +20,8 @@
     "build": "tsc",
     "clean": "rm -rf dist",
     "lint": "eslint --ext .ts",
-    "dev": "npm run build -- --watch"
+    "dev": "npm run build -- --watch",
+    "prepublishOnly": "npm install && npm run precommit"
   },
   "devDependencies": {
     "@types/jest": "^29.5.1",

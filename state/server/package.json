@@ -20,7 +20,8 @@
     "build": "tsc",
     "clean": "rm -rf dist",
     "lint": "eslint --ext .ts",
-    "dev": "npm run build -- --watch"
+    "dev": "npm run build -- --watch",
+    "prepublishOnly": "npm install && npm run precommit"
   },
   "devDependencies": {
     "@types/jest": "^29.5.1",
@@ -36,7 +37,7 @@
   "dependencies": {
     "@krmx/base": "^0.5.6",
     "@krmx/server": "^0.5.4",
-    "@krmx/state": "file:../base",
+    "@krmx/state": "^0.0.1",
     "immer": "^10.1.1",
     "jsondiffpatch": "0.5.0",
     "zod": "^3.23.8"
