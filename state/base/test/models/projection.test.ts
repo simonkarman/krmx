@@ -1,4 +1,4 @@
-import { ProjectionModel, Random } from '../../../src';
+import { ProjectionModel, Random } from '../../src';
 import { z } from 'zod';
 import { patch } from 'jsondiffpatch';
 
