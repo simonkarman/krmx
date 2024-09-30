@@ -36,7 +36,7 @@ import { createServer } from '@krmx/server';
 
 const server = createServer(/* configuration */);
 server.on('message', (username, message) => {
-  console.log(`Received a message from ${username}:`, message);
+  console.log(`Received a ${message.type} message from ${username}:`, message.payload);
 });
 
 const port = 12345;
@@ -49,13 +49,13 @@ import { createClient } from '@krmx/client';
 
 const client = createClient(/* configuration */);
 client.on('message', (message) => {
-  console.log('Received a server message:', message);
+  console.log(`Received a ${message.type} message from the server:`, message.payload);
 });
 
 await client.connect('ws://localhost:12345');
 await client.link('simon');
 
-client.send('Hello, server!');
+client.send({ type: 'chat', payload: 'Hello, World!' });
 ```
 
 > There are two client implementations available: a NodeJS Client (`@krmx/client`) and a React Client (`@krmx/client-react`). More information about the clients can be found in the [Krmx API](/krmx-api).

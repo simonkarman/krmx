@@ -1,0 +1,51 @@
+# Krmx State
+Krmx State extends the Krmx framework with powerful state synchronization capabilities, offering three distinct models for managing shared state across clients and servers: Atom, Stream, and Projection. Each model is designed to address specific use cases and state management patterns commonly encountered in distributed applications.
+
+## State Synchronization Models
+### Atom
+The Atom model represents a single, atomic piece of synchronizable state. It's ideal for simple, directly mutable values that need to be shared across all clients. Atoms are not authoritative, allowing for updates by all clients.
+
+Use Atom when: You need to share simple flags, counters, or individual values that can be directly modified by any client.
+
+### Stream
+The Stream model implements an append-only log of events or changes. It's authoritative and optimistic, making it suitable for scenarios where the history of changes can be used to derive your state. The stream of events is transparent to all clients.
+
+Use Stream when: You're dealing with chat systems, activity feeds, or game moves where the sequence of events matters and is transparent to all clients.
+
+### Projection
+The Projection model manages complex states where the server maintains the full state, but clients work with a projection of the full state. Which can be a partial and transformed view. It's authoritative and supports optimistic updates through action-based modifications.
+
+Use Projection when: Your application involves complex states with partial client views, or any scenario where clients need a specific perspective on a larger state. Since individual actions of clients are not broadcast, this is ideal for situations where actions contain private information.
+
+## Model Comparison
+The following table provides a detailed comparison of the three state synchronization models.
+
+&nbsp;                      | [Atom Model](/state/atom) | [Stream Model](/state/stream) | [Projection Model](/state/projection)
+---                         | ---                       | ---                           | ---
+*Server State*              | Single value              | Event log                     | Full state
+*Client State*              | Single value              | State derived from events     | Partial or transformed projection on the full state
+*Authoritative*             | No                        | Yes                           | Yes
+*Optimistic Updates*        | Yes                       | Yes                           | Yes
+*Client State Modification* | Direct value assignment   | Append new events             | Send actions to server
+*Synchronization Method*    | Direct value sync         | Event propagation             | Differential updates (delta from previous projection)
+
+Description of each row:
+- *Server State* - Describes how the state is represented and stored on the server.
+- *Client State* - Indicates how the state is represented on the client side.
+- *Authoritative* - Specifies whether the server has the final say on the state's validity.
+- *Optimistic Updates* - Indicates if the model allows immediate local updates before server confirmation.
+- *Client State Modification* - Describes the mechanism by which clients can alter the state.
+- *Synchronization Method* - Explains how state changes on the server are propagated between server and clients.
+
+## Choosing the Right Model(s)
+It's not only acceptable but often advantageous to use a combination of Atom, Stream, and Projection models within the same application. Each part of your application may have different requirements for state management, and Krmx State allows you to address these varied needs with multiple models per application.
+
+When combining models:
+- Clearly define the domain by defining the boundaries and responsibilities of each model instance.
+- Consider the interaction between different models, especially when state in one model might affect another. These inter-model interactions are considered external events.
+
+By combining models, you can build applications that leverage the strengths of each state synchronization approach. Each model has its own section in this documentation with detailed API references, usage patterns, and examples.
+
+- For simple values: Use [Atom](/state/atom)
+- For transparent event-based systems: Use [Stream](/state/stream)
+- For complex states with client-specific views: Use [Projection](/state/projection)

@@ -1,0 +1,19 @@
+{
+  "name": "@krmx/state-root",
+  "version": "0.0.1",
+  "description": "Managing shared state across Krmx clients and servers",
+  "scripts": {
+    "postinstall": "npm --prefix base install && npm --prefix server install && npm --prefix client-react install",
+    "precommit": "npm run --prefix base precommit && npm run --prefix server precommit && npm run --prefix client-react precommit"
+  },
+  "author": "Simon Karman",
+  "license": "ISC",
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run precommit"
+    }
+  },
+  "dependencies": {
+    "husky": "^4.3.8"
+  }
+}

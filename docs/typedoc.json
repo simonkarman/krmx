@@ -1,6 +1,14 @@
 {
   "name": "Krmx - TypeScript SDK - Reference",
-  "entryPoints": ["../base", "../server", "../client", "../client-react"],
+  "entryPoints": [
+    "../base",
+    "../server",
+    "../client",
+    "../client-react",
+    "../state/base",
+    "../state/server",
+    "../state/client-react"
+  ],
   "entryPointStrategy": "packages",
   "out": "./public/sdk",
   "cleanOutputDir": true,
