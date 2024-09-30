@@ -11,8 +11,8 @@ export const registerAtoms = (client: Client): <T extends Atom>(key: string, def
 ] => {
   if (client.getStatus() === 'linked') {
     throw new Error(
-      'supportEventSource cannot be called with a client that is already linked to a user, as messages sent after linking but prior '
-      + 'to the event source being created would be lost.',
+      'registerAtoms cannot be called with a client that is already linked to a user, as messages sent after linking but prior '
+      + 'to the atoms being created would be lost.',
     );
   }
 
@@ -49,7 +49,10 @@ export const registerAtoms = (client: Client): <T extends Atom>(key: string, def
     if (!isAtomSetMessage(message)) {
       return;
     }
-    atoms[message.payload.key] = message.payload.atom;
+    atoms = {
+      ...atoms,
+      [message.payload.key]: message.payload.atom,
+    };
     emit(); // TODO: optimize by only re-rendering the component that uses this specific atom
   });
 
@@ -57,7 +60,7 @@ export const registerAtoms = (client: Client): <T extends Atom>(key: string, def
     value: T,
     setter: (v: T | ((v: T) => T)) => boolean,
   ] => {
-    const fromState = useSyncExternalStore(subscribe, () => atoms, () => atoms)[key] as T | undefined;
+    const fromState = useSyncExternalStore(subscribe, () => atoms[key], () => atoms[key]) as T | undefined;
     const curr = fromState === undefined ? defaultAtom : fromState;
     const set = (_atom: (T) | ((v: T) => T)): boolean => {
       if (client.getStatus() !== 'linked') {

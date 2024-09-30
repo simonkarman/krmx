@@ -14,7 +14,7 @@ import { StreamModel, StreamProps, StreamAppendMessage, isStreamAppendMessage } 
  */
 export const registerStream = (server: Server, domain: string, model: StreamModel<unknown>, props: StreamProps) => {
   const stream = model.spawn(props);
-  const history: { dispatcher: string, event: Message }[] = [];
+  const history: { domain: string, dispatcher: string, event: Message }[] = [];
 
   // Allow dispatching of events
   const dispatch = (dispatcher: string, event: Message) => {
@@ -41,12 +41,9 @@ export const registerStream = (server: Server, domain: string, model: StreamMode
 
   // Whenever a user links, send it the history of events
   const offLink = server.on('link', (username) => {
-    history.forEach(event => server.send<StreamAppendMessage>(username, {
+    history.forEach(payload => server.send<StreamAppendMessage>(username, {
       type: 'stream/append',
-      payload: {
-        ...event,
-        domain,
-      },
+      payload,
     }));
   });
 

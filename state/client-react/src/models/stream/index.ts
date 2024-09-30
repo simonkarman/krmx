@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { Message } from '@krmx/base';
 import { Client } from '@krmx/client';
-import { isStreamAppendMessage, StreamModel, StreamProps } from '@krmx/state';
+import { isStreamAppendMessage, StreamAppendMessage, StreamModel, StreamProps } from '@krmx/state';
 
 /**
  * Register a stream model on this client using React hooks.
@@ -80,7 +80,14 @@ export const registerStream = <State>(client: Client, domain: string, model: Str
     emit();
 
     // send the event to the server
-    client.send({ ...event, type: `${domain}/${event.type}` });
+    client.send<StreamAppendMessage>({
+      type: 'stream/append',
+      payload: {
+        domain,
+        dispatcher: client.getUsername() || 'self',
+        event,
+      },
+    });
     return true;
   };
 
