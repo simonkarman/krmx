@@ -39,7 +39,7 @@ jobs:
         uses: actions/configure-pages@v3
       - name: Build with Next
         run: |
-          npm run install-all
+          npm install
           cd docs
           npm run build
       - name: Upload artifact
