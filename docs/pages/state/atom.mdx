@@ -2,3 +2,41 @@
 The Atom model represents a single, atomic piece of synchronizable state. It's ideal for simple, directly mutable values that need to be shared across all clients. Atoms are not authoritative, allowing for updates by all clients.
 
 > Choose between Atom, Stream, or Projection models based on your application's requirements. Each model has its own strengths and use cases. More information on the models can be found in the [Model Comparison](/state#model-comparison) section.
+
+## Example Usage
+This section demonstrates how to use the Atom model in both server-side and client-side applications. We'll cover basic setup and implementation for each environment.
+
+### Server-Side
+To use the Atom model on the server, you need to register it with your Krmx server instance. This can be done with a single line of code, and you have the option to provide additional configuration if needed. Here's an example of how to set it up:
+
+```ts
+import { createServer } from '@krmx/server';
+import { registerAtoms } from '@krmx/state-server';
+
+const server = createServer();
+registerAtoms(server, { /* configure here */ });
+```
+
+### Client-Side (React)
+For client-side usage in React applications, you'll need to register the Atom model with your Krmx client. This process is similar to the server-side setup, requiring just one line of code. You can also configure the Atom model during this registration if necessary. Here's how to set it up:
+
+```ts
+import { createClient } from '@krmx/client-react';
+import { registerAtoms } from '@krmx/state-client-react';
+
+export const { client, useClient } = createClient();
+export const useAtom = registerAtoms(client);
+```
+
+Once registered, you can use the Atom model in your React components. The following example demonstrates how to create a simple counter component using the Atom model:
+
+```ts
+export const MyComponent = () => {
+  const [counter, setCounter] = useAtom<number>('example', 0);
+  return <button onClick={() => setCounter((r) => r + 1)}>
+    {counter}
+  </button>;
+};
+```
+
+In this setup, all clients connected to the server will receive updates to the Atom model automatically. This ensures that your application's state remains synchronized across all connected clients.
