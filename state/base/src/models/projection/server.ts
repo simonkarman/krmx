@@ -10,13 +10,13 @@ type ServerSubscription = (getDeltaFor: (username: string) => Delta | false, opt
  * A projection client is the client-side representation of the projection model. It is used to manage the state on the server side and allows for
  *  dispatching of actions to alter the state and notify all subscribers of the changes to the state in the for of projection deltas.
  */
-export class ProjectionServer<State, View> {
+export class ProjectionServer<State, Projection> {
   private subscriptions: ServerSubscription[] = [];
 
   constructor(
     private state: State,
-    private readonly viewMapper: (state: State, username: string) => View,
-    private readonly actionDefinitions: ActionDefinitions<State, View>,
+    private readonly projectionMapper: (state: State, username: string) => Projection,
+    private readonly actionDefinitions: ActionDefinitions<State, Projection>,
   ) {}
 
   /**
@@ -61,8 +61,8 @@ export class ProjectionServer<State, View> {
       try {
         subscription((dispatcher: string) => {
           const delta = diff(
-            this.viewMapper(previousState, dispatcher),
-            this.viewMapper(this.state, dispatcher),
+            this.projectionMapper(previousState, dispatcher),
+            this.projectionMapper(this.state, dispatcher),
           );
           if (delta === undefined) {
             return false;
@@ -77,8 +77,8 @@ export class ProjectionServer<State, View> {
   }
 
   /**
-   * Subscribe to updates on the state. The subscriber will be notified with a method to get the delta between the previous view and the new view of a
-   *  specific dispatcher. The subscriber will also be notified with the optimistic id that was passed to the dispatch method.
+   * Subscribe to updates on the state. The subscriber will be notified with a method to get the delta between the previous projection and the new
+   *  projection of a specific dispatcher. The subscriber will also be notified with the optimistic id that was passed to the dispatch method.
    *
    * Note: The subscriber should call the method to get the delta for a specific dispatcher. That method returns false if there is no delta, in that
    *  case the subscriber should still inform that dispatcher to release the optimistic id manually using client.releaseOptimistic(optimisticId). If
@@ -96,6 +96,6 @@ export class ProjectionServer<State, View> {
    * @param dispatcher The dispatcher to get the projection for.
    */
   projection(dispatcher: string) {
-    return structuredClone(this.viewMapper(this.state, dispatcher));
+    return structuredClone(this.projectionMapper(this.state, dispatcher));
   }
 }

@@ -2,11 +2,11 @@ import { z, ZodAny, ZodAnyDef, ZodType, ZodUndefined } from 'zod';
 import { ProjectionServer } from './server';
 import { ProjectionClient } from './client';
 
-export type ActionDefinitions<State, View> = {
+export type ActionDefinitions<State, Projection> = {
   [type: string]: {
     payloadSchema: ZodAny
     handler: <T extends State>(state: T, dispatcher: string, payload: ZodAnyDef) => T | void,
-    optimisticHandler: (<T extends View>(view: T, dispatcher: string, payload: ZodAnyDef) => T | void) | undefined,
+    optimisticHandler: (<T extends Projection>(projection: T, dispatcher: string, payload: ZodAnyDef) => T | void) | undefined,
   }
 };
 
@@ -29,12 +29,12 @@ export class ProjectionModel<State, Projection> {
    * Creates a new projection model.
    *
    * @param initialState The initial server-side state.
-   * @param viewMapper A function that maps the state to a projection for a specific user. This function will be called for each client whenever the
+   * @param projectionMapper A function that maps the state to a projection for a specific user. This function will be called for each client whenever the
    *  state changes. The delta from the previous projection to the new projection will be sent to the client in the form of a delta.
    */
   constructor(
     public readonly initialState: State,
-    private readonly viewMapper: (state: State, username: string) => Projection,
+    private readonly projectionMapper: (state: State, username: string) => Projection,
   ) {}
 
   /**
@@ -56,7 +56,7 @@ export class ProjectionModel<State, Projection> {
     type: Type,
     payloadSchema: PayloadSchema,
     handler: (state: State, dispatcher: string, payload: z.infer<PayloadSchema>) => State | void,
-    optimisticHandler?: (view: Projection, dispatcher: string, payload: z.infer<PayloadSchema>) => Projection | void,
+    optimisticHandler?: (projection: Projection, dispatcher: string, payload: z.infer<PayloadSchema>) => Projection | void,
   ):
     PayloadSchema extends ZodUndefined
       ? () => { type: Type, payload: undefined }
@@ -85,7 +85,7 @@ export class ProjectionModel<State, Projection> {
    */
   spawnServer(): ProjectionServer<State, Projection> {
     this.immutable = true;
-    return new ProjectionServer<State, Projection>(this.initialState, this.viewMapper, this.actionDefinitions);
+    return new ProjectionServer<State, Projection>(this.initialState, this.projectionMapper, this.actionDefinitions);
   }
 
   /**
