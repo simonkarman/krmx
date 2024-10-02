@@ -3,34 +3,61 @@ The Atom model represents a single, atomic piece of synchronizable state. It's i
 
 > Choose between Atom, Stream, or Projection models based on your application's requirements. Each model has its own strengths and use cases. More information on the models can be found in the [Model Comparison](/state#model-comparison) section.
 
-## Example Usage
-This section demonstrates how to use the Atom model in both server-side and client-side applications. We'll cover basic setup and implementation for each environment.
+## Atom Explained
+At its core, an atom represents a single, synchronized value that can be of type number, string, or boolean. Each atom is referenced by a key.
+
+### Keys
+The key plays a crucial role in identifying and managing individual atoms. Each atom is associated with a unique key, which serves as its identifier within the Krmx State system.
+
+The key is typically a string that you choose when creating or accessing an atom. It acts as a name or address for the atom, allowing both the server and clients to reference specific pieces of shared state. For example, you might use keys like 'counter', 'lobbyName', or 'maxNumberOfUsers' to represent different atoms in your application.
+
+When using the Atom model, you'll often see the key as the first argument in functions or hooks. For instance, in a React component, you might use:
+
+```ts
+const [counter, setCounter] = useAtom<number>('counter', 0);
+```
+
+Here, 'counter' is the key for this particular atom.
+
+### Modifying Atoms
+When you create an atom, you're essentially establishing a shared reference point that all connected clients can access and modify. Any client has the ability to update the atom's value using the `atom/set` operation.
+
+Upon an update to an atom, the server immediately broadcasts the new value to all connected clients, ensuring that each client has access to the latest value of an atom data. Each client always uses the latest broadcast value for each atom.
+
+The Atom Model's simplicity makes it particularly useful for scenarios where you need to maintain a single, shared piece of information. Whether it's a global counter, a shared boolean flag, or a common string value, the Atom Model provides a way to keep these values in sync.
+
+## Getting Started
+This section demonstrates how to use the Atom model on both server-side and client-side of a Krmx application.
 
 ### Server-Side
-To use the Atom model on the server, you need to register it with your Krmx server instance. This can be done with a single line of code, and you have the option to provide additional configuration if needed. Here's an example of how to set it up:
+To use the Atom model on the server, you need to register it with your Krmx server instance. After installing the server extension for Krmx state with `npm install @krmx/state-server`, this can be done with a single line of code, and you have the option to provide additional configuration if needed. Here's an example of how to set it up:
 
 ```ts
 import { createServer } from '@krmx/server';
 import { registerAtoms } from '@krmx/state-server';
 
 const server = createServer();
-registerAtoms(server, { /* configure here */ });
+registerAtoms(server, { /* configure here */ }); // <-- this line!
 ```
 
 ### Client-Side (React)
-For client-side usage in React applications, you'll need to register the Atom model with your Krmx client. This process is similar to the server-side setup, requiring just one line of code. You can also configure the Atom model during this registration if necessary. Here's how to set it up:
+For client-side usage in React applications, you'll need to register the Atom model with your Krmx client. This process is similar to the server-side setup, first you install the React client extension for Krmx state with `npm install @krmx/state-client-react`, then all that is required is one line of code. Here's how to set it up:
 
 ```ts
+// in krmx.ts
 import { createClient } from '@krmx/client-react';
 import { registerAtoms } from '@krmx/state-client-react';
 
 export const { client, useClient } = createClient();
-export const useAtom = registerAtoms(client);
+export const useAtom = registerAtoms(client); // <-- this line!
 ```
 
-Once registered, you can use the Atom model in your React components. The following example demonstrates how to create a simple counter component using the Atom model:
+Once registered on both server and client, you can use the Atom model in your React components. The following example demonstrates how to create a simple counter component using the Atom model:
 
-```ts
+```tsx
+// in my-component.tsx
+import { useAtom } from './krmx.ts'
+
 export const MyComponent = () => {
   const [counter, setCounter] = useAtom<number>('example', 0);
   return <button onClick={() => setCounter((r) => r + 1)}>
@@ -40,3 +67,8 @@ export const MyComponent = () => {
 ```
 
 In this setup, all clients connected to the server will receive updates to the Atom model automatically. This ensures that your application's state remains synchronized across all connected clients.
+
+## More Information
+Take a look at the [TypeScript SDK reference](/sdk/types/Krmx_State_Base.Atom.html) and [source code](https://github.com/simonkarman/krmx/blob/main/state/base/src/models/atom/index.ts) to learn more about the Atom model.
+
+An example can be found in the [Krmx Starter](https://github.com/simonkarman/krmx-starter) in the [Example Background Graphic](https://github.com/simonkarman/krmx-starter/blob/main/client/src/components/example-background-graphic.tsx).

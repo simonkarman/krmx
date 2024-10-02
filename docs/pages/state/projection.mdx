@@ -2,3 +2,122 @@
 The Projection model manages complex states where the server maintains the full state, but clients work with a projection of the full state. Which can be a partial and transformed view. It's authoritative and supports optimistic updates through action-based modifications.
 
 > Choose between Atom, Stream, or Projection models based on your application's requirements. Each model has its own strengths and use cases. More information on the models can be found in the [Model Comparison](/state#model-comparison) section.
+
+## Projection Model Explained
+The Projection Model in Krmx State offers a sophisticated approach to managing state, particularly suited for applications requiring a separation between server-side private state and client-side projections. This model uses the `projection/` prefix for its messages, distinguishing it from other Krmx State models.
+
+### Server-Side State Management
+On the server side, the Projection Model maintains an internal, private state. This state is not directly accessible to clients, allowing for secure data management and complex server-side logic.
+
+### Client-Side Projections
+Clients work with a projection of the server's private state. This projection is a derived, potentially simplified or filtered version of the server state, tailored to each client's needs. When a client first connects, it receives its full projection as a JSON object via the `projection/set` message.
+
+### State Updates and Delta Synchronization
+As the server-side state changes, client projections are updated through delta synchronization. Instead of sending the entire state on each change, the server computes and sends only the differences (deltas) between the previous and new projections. This `projection/delta` message approach significantly reduces data transfer and improves efficiency.
+
+### Client Actions and Server Validation
+Clients can influence the state by sending actions to the server using the `projection/action` message. The server then validates these actions, computes the new state, and determines the resulting changes in each client's projection.
+
+### Optimistic Updates
+To enhance responsiveness, the Projection Model implements an optimistic update system. When a client sends an action, it immediately applies the expected changes to its local projection using an optimistic handler. This allows for instant feedback in the user interface.
+
+If the server determines that an action is invalid or doesn't result in any changes, it sends a `projection/invalidate` message to the client. This prompts the client to remove the optimistic action from its local state, ensuring consistency with the server's authoritative state.
+
+### Efficiency and Flexibility
+The Projection Model's design allows for efficient state management in complex applications. By maintaining a private server state and sending only relevant projections and deltas to clients, it provides flexibility in data handling while minimizing network traffic. The optimistic update system further enhances the user experience by providing immediate feedback while maintaining data integrity.
+
+## Getting Started
+This section demonstrates how to use the Projection model on both server-side and client-side of a Krmx application.
+
+### Shared Code
+This model requires some shared code to define a projection model that can be used by your server and clients. After installing Krmx State in your shared code package, by running `npm install @krmx/state`, you can create a projection model like this:
+
+```ts
+// in shared/index.ts
+import { z } from 'zod';
+import { ProjectionModel, Random } from '@krmx/state';
+
+export const cardsModel = new ProjectionModel(
+  /* the initial state */
+  { random: new Random('hello-world'), cards: [] as { card: string, owner: string }[] },
+  /* projection mapper, that only shows the cards belonging to the dispatcher */
+  (state, dispatcher) => ({ myCards: state.cards.filter(c => c.owner === dispatcher) }),
+);
+
+export const seed = cardsModel.when('seed', z.string(), (state, dispatcher, payload) => {
+  if (dispatcher !== '<server>') {
+    throw new Error('only the server can seed the randomizer');
+  }
+  state.random = new Random(payload);
+});
+
+export const draw = cardsModel.when('draw', z.undefined(), (state, dispatcher) => {
+  // this will only run server side
+  state.cards.push({ card: state.random.string(10), owner: dispatcher });
+}, view => {
+  // this will only run client side for optimistic updates, also this optimistic handler is optional!
+  view.myCards.push({ card: '??????????', owner: '<self>' });
+});
+```
+
+The code above creates and exports an example model named `cardsModel`. It includes corresponding action creators to `seed` the randomizer and `draw` a card. This example shows how you can let the server handle some private logic and the clients get a specific projection of only the cards they own.
+
+### Server Side
+To use the Projection model on the server, you need to register it with your Krmx server instance. After installing the server extension for Krmx state with `npm install @krmx/state-server`, this can be done with a single line of code. Here's an example of how to set it up:
+
+```ts
+// in server/index.ts
+import { createServer } from '@krmx/server';
+import { registerProjection } from '@krmx/state-server';
+import { cardsModel, seed } from 'file:../shared'; // reference your shared code package here
+
+const server = createServer();
+const { dispatch } = registerProjection(server, 'my-cards', cardsModel); // <-- this line
+
+// immediately dispatch an event to set a unique seed
+dispatch("<server>", seed(Date.now().toString())) // note: this is not a safe random seed to use in production applications
+```
+
+### Client Side (React only)
+For client-side usage in React applications, you'll need to register the Projection model with your Krmx client. This process is similar to the server-side setup, first you install the React client extension for Krmx state with `npm install @krmx/state-client-react`, then all that is required is one line of code. Here's how to set it up:
+
+```ts
+// in krmx.ts
+import { createClient } from '@krmx/client-react';
+import { registerProjection } from '@krmx/state-client-react';mport { cardsModel } from 'file:../shared'; // reference your shared code package here
+
+export const { client, useClient } = createClient();
+export const {
+  use: useCardsProjection,
+  dispatch: dispatchCardsAction,
+} = registerProjection(client, 'my-cards', cardsModel); // <-- this line!
+```
+
+Once registered on both server and client, you can use the Projection model in your React components. The following example demonstrates how to use the cards model in a React component:
+
+```tsx
+// in my-component.tsx
+import { useCardsProjection, dispatchCardsAction } from './krmx.ts'
+import { draw } from 'file:../shared'; // reference your shared code package here
+
+export const MyComponent = () => {
+  const projection = useCardsProjection();
+  return <div>
+    <ul>
+      {projection.myCards.map(c => <li>{c.card}</li>)}
+    </ul>
+    <button onClick={() => dispatchCardsAction(draw())}>
+      Draw
+    </button>
+  </div>;
+};
+```
+
+In this setup, all clients connected to the server will receive updates to the Projection model automatically. This ensures that your application's state remains synchronized across all connected clients.
+
+> Using `dispatchCounter(increment(3))` vs `client.send(increment(3))`. Both would work, however by using the dispatchCounter you ensure that you benefit from optimistic updates on this client while the server is still processing the validity of the event. If the server would invalidate the event the optimistic update is automatically pruned from the optimistic state.
+
+## More Information
+Take a look at the [TypeScript SDK reference](/sdk/classes/Krmx_State_Base.ProjectionModel.html) and [source code](https://github.com/simonkarman/krmx/blob/main/state/base/src/models/projection/model.ts) to learn more about the Projection model.
+
+An example can be found in the [Krmx Starter](https://github.com/simonkarman/krmx-starter) in the [Example Card Game](https://github.com/simonkarman/krmx-starter/blob/main/client/src/components/example-card-game.tsx).
