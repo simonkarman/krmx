@@ -9,6 +9,7 @@ import {
 } from '@krmx/base';
 import { ExpectedQueryParams, hasExpectedQueryParams } from './utils';
 import { VERSION } from './version';
+import { usernameRegex } from './username-regex';
 
 /**
  * The properties with which to create the Server.
@@ -76,7 +77,7 @@ export interface Props {
   /**
    * A predicate that determines what the server should consider to be a valid username.
    *
-   * @default When not provided, the server will validate usernames using the following regex: /^[a-z0-9_-]{3,20}$/.
+   * @default When not provided, the server will validate usernames using the username regex (exported by Krmx as usernameRegex).
    */
   isValidUsername?: (username: string) => boolean;
 }
@@ -265,7 +266,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     }
     this.metadata = props?.metadata ?? false;
     this.acceptNewUsers = props?.acceptNewUsers ?? true;
-    this.isValidUsername = props?.isValidUsername ?? ((username: string) => /^[a-z0-9_-]{3,20}$/.test(username));
+    this.isValidUsername = props?.isValidUsername ?? ((username: string) => usernameRegex.test(username));
 
     this.status = 'initializing';
     this.httpServer = props?.http?.server ?? new http.Server();
