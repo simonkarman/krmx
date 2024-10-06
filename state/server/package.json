@@ -1,6 +1,6 @@
 {
   "name": "@krmx/state-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "dist/src/index.js",
   "author": "Simon Karman",
   "contributors": [
@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "@krmx/base": "^0.5.6",
-    "@krmx/server": "^0.5.4",
+    "@krmx/server": "^0.5.5",
     "@krmx/state": "^0.0.1",
     "immer": "^10.1.1",
     "jsondiffpatch": "0.5.0",
