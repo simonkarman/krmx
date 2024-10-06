@@ -645,4 +645,14 @@ describe('Krmx Server', () => {
       });
     }
   });
+
+  it('should not kick a client if it responds to the websocket ping with a pong', async () => {
+    const server = createServer({ pingIntervalMilliseconds: 100 });
+    const port = await server.listen();
+    const websocketClient = new WebSocket(`ws://localhost:${port}`);
+    await sleep(500);
+    expect(websocketClient.readyState).toStrictEqual(websocketClient.OPEN);
+    await server.close();
+    websocketClient.close();
+  });
 });

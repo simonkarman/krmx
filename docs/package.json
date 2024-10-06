@@ -7,7 +7,7 @@
   "description": "krmx documentation",
   "private": true,
   "scripts": {
-    "start": "next",
+    "dev": "next",
     "build": "npm run sdk && next build && next export",
     "precommit": "next lint && npm run build",
     "sdk": "typedoc"
@@ -23,7 +23,7 @@
     "autoprefixer": "^10.4.14",
     "eslint": "8.46.0",
     "eslint-config-next": "13.4.13",
-    "postcss": "^8.4.27",
+    "postcss": "8.4.31",
     "tailwindcss": "^3.3.3",
     "typedoc": "^0.25.9"
   }
