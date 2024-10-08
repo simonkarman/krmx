@@ -16,6 +16,10 @@ defaults:
 
 jobs:
   publish:
+    strategy:
+      max-parallel: 1 # required as there are dependencies between the published packages
+      matrix:
+        package: [base, server]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,19 +33,20 @@ jobs:
       - name: Check Version
         id: version_check
         run: |
-          LOCAL_VERSION=$(node -e "console.log(require('./base/package.json').version);")
-          REMOTE_VERSION=$(npm show "@krmx/base" version)
+          LOCAL_VERSION=$(node -e "console.log(require('./${{ matrix.package }}/package.json').version);")
+          REMOTE_VERSION=$(npm show "@krmx/${{ matrix.package }}" version)
+          echo "-- @krmx/${{ matrix.package }} --"
           echo "Local version: $LOCAL_VERSION"
           echo "Remote version: $REMOTE_VERSION"
           if [ "$LOCAL_VERSION" = "$REMOTE_VERSION" ]; then
+            echo "[!!] Publishing skipped as the version is already published."
             echo "SHOULD_PUBLISH=false" >> "$GITHUB_OUTPUT"
           else
+            echo "[!!] Publishing is required."
             echo "SHOULD_PUBLISH=true" >> "$GITHUB_OUTPUT"
           fi
-      - run: echo "Should publish? $SHOULD_PUBLISH"
-        env:
-          SHOULD_PUBLISH: ${{ steps.version_check.outputs.SHOULD_PUBLISH }}
-#      - name: Publish base to NPM
+      - if: ${{ steps.version_check.outputs.SHOULD_PUBLISH == 'true' }}
+        run: echo "Publishing @krmx/${{ matrix.package }} now!"
 #        run: npm publish --prefix base --access public
 #        env:
 #          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
