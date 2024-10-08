@@ -28,25 +28,31 @@ jobs:
           node-version: '22.x'
           registry-url: 'https://registry.npmjs.org'
           scope: '@krmx'
-#      - run: npm install
-#      - run: npm run precommit
-      - name: Check Version
-        id: version_check
+      - name: Install Dependencies
+        run: npm install && npm run precommit
+      - name: Publish Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          LOCAL_VERSION=$(node -e "console.log(require('./${{ matrix.package }}/package.json').version);")
-          REMOTE_VERSION=$(npm show "@krmx/${{ matrix.package }}" version)
+          cd ${{ matrix.package }}
           echo "-- @krmx/${{ matrix.package }} --"
+          LOCAL_VERSION=$(node -e "console.log(require('./package.json').version);")
           echo "Local version: $LOCAL_VERSION"
+          REMOTE_VERSION=$(npm show "@krmx/${{ matrix.package }}" version)
           echo "Remote version: $REMOTE_VERSION"
           if [ "$LOCAL_VERSION" = "$REMOTE_VERSION" ]; then
             echo "[!!] Publishing skipped as the version is already published."
-            echo "SHOULD_PUBLISH=false" >> "$GITHUB_OUTPUT"
           else
             echo "[!!] Publishing is required."
-            echo "SHOULD_PUBLISH=true" >> "$GITHUB_OUTPUT"
-          fi
-      - if: ${{ steps.version_check.outputs.SHOULD_PUBLISH == 'true' }}
-        run: echo "Publishing @krmx/${{ matrix.package }} now!"
-#        run: npm publish --prefix base --access public
-#        env:
-#          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+            jq -r '.dependencies | to_entries[] | select(.value | startswith("file:")) | .key + "|" + .value' package.json |
+            while IFS="|" read -r pkg path; do
+              version=$(jq -r .version ${path#file:}/package.json)
+              echo "Updating dependencies $pkg to ^$version (found in ${path#file:}/package.json)"
+              sed -e "s|\"$pkg\": \"$path\"|\"$pkg\": \"^$version\"|" package.json > package.json.tmp
+              mv package.json.tmp package.json
+            done
+            npm install
+            cat package.json
+            cat package-lock.json
+            # npm publish --access public
+          fi 
