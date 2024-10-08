@@ -1,0 +1,47 @@
+name: Publish packages to npm
+
+on:
+  push:
+    branches:
+      - main
+      - 0.6.0
+
+concurrency:
+  group: "publish"
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@krmx'
+#      - run: npm install
+#      - run: npm run precommit
+      - name: Check Version
+        id: version_check
+        run: |
+          LOCAL_VERSION=$(node -e "console.log(require('./base/package.json').version);")
+          REMOTE_VERSION=$(npm show "@krmx/base" version)
+          echo "Local version: $LOCAL_VERSION"
+          echo "Remote version: $REMOTE_VERSION"
+          if [ "$LOCAL_VERSION" = "$REMOTE_VERSION" ]; then
+            echo "SHOULD_PUBLISH=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "SHOULD_PUBLISH=true" >> "$GITHUB_OUTPUT"
+          fi
+      - run: echo "Should publish? $SHOULD_PUBLISH"
+        env:
+          SHOULD_PUBLISH: ${{ steps.version_check.outputs.SHOULD_PUBLISH }}
+#      - name: Publish base to NPM
+#        run: npm publish --prefix base --access public
+#        env:
+#          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
