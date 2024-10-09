@@ -17,7 +17,7 @@ defaults:
 jobs:
   publish:
     strategy:
-      max-parallel: 1 # required as there are dependencies between the published packages
+      max-parallel: 1 # has to be 1 (one) as there are dependencies between the published packages
       matrix:
         package: [base, server]
     runs-on: ubuntu-latest
@@ -29,21 +29,28 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           scope: '@krmx'
       - name: Install Dependencies
-        run: npm install && npm run precommit
+        run: npm install
+      - name: Verify Build and Tests
+        run: npm --prefix ${{ matrix.package }} run precommit
       - name: Publish Packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd ${{ matrix.package }}
           echo "-- @krmx/${{ matrix.package }} --"
+
           LOCAL_VERSION=$(node -e "console.log(require('./package.json').version);")
           echo "Local version: $LOCAL_VERSION"
+
           REMOTE_VERSION=$(npm show "@krmx/${{ matrix.package }}" version)
           echo "Remote version: $REMOTE_VERSION"
+
           if [ "$LOCAL_VERSION" = "$REMOTE_VERSION" ]; then
             echo "[!!] Publishing skipped as the version is already published."
           else
             echo "[!!] Publishing is required."
+
+            # Check if there are local dependencies in the package.json
             if jq -e '.dependencies | to_entries[] | select(.value | startswith("file:")) | length > 0' package.json &> /dev/null; then
               echo "Found local dependencies in package.json, updating them now."
               jq -r '.dependencies | to_entries[] | select(.value | startswith("file:")) | .key + "|" + .value' package.json |
@@ -53,9 +60,14 @@ jobs:
                 sed -e "s|\"$pkg\": \"$path\"|\"$pkg\": \"^$version\"|" package.json > package.json.tmp
                 mv package.json.tmp package.json
               done
+              # Now have to reinstall as the package.json has changed
+              npm install
             fi
-            npm install
+
+            # Print information about the package
             cat package.json
             cat package-lock.json
+
+            # Now it is time to actually publish the package
             # npm publish --access public
           fi 
