@@ -44,13 +44,16 @@ jobs:
             echo "[!!] Publishing skipped as the version is already published."
           else
             echo "[!!] Publishing is required."
-            jq -r '.dependencies | to_entries[] | select(.value | startswith("file:")) | .key + "|" + .value' package.json |
-            while IFS="|" read -r pkg path; do
-              version=$(jq -r .version ${path#file:}/package.json)
-              echo "Updating dependencies $pkg to ^$version (found in ${path#file:}/package.json)"
-              sed -e "s|\"$pkg\": \"$path\"|\"$pkg\": \"^$version\"|" package.json > package.json.tmp
-              mv package.json.tmp package.json
-            done
+            if jq -e '.dependencies | to_entries[] | select(.value | startswith("file:")) | length > 0' package.json &> /dev/null; then
+              echo "Found local dependencies in package.json, updating them now."
+              jq -r '.dependencies | to_entries[] | select(.value | startswith("file:")) | .key + "|" + .value' package.json |
+              while IFS="|" read -r pkg path; do
+                version=$(jq -r .version ${path#file:}/package.json)
+                echo "- Updating dependencies $pkg to ^$version (found in ${path#file:}/package.json)"
+                sed -e "s|\"$pkg\": \"$path\"|\"$pkg\": \"^$version\"|" package.json > package.json.tmp
+                mv package.json.tmp package.json
+              done
+            fi
             npm install
             cat package.json
             cat package-lock.json
