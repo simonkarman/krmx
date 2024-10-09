@@ -1,18 +1,9 @@
 {
   "name": "@krmx/base",
+  "description": "krmx base",
+  "author": "Simon Karman",
   "version": "0.6.0",
   "main": "dist/src/index.js",
-  "author": "Simon Karman",
-  "contributors": [
-    {
-      "name": "Simon Karman",
-      "url": "https://www.simonkarman.nl",
-      "githubUsername": "simonkarman"
-    }
-  ],
-  "license": "ISC",
-  "homepage": "https://simonkarman.github.io/krmx",
-  "description": "krmx base",
   "scripts": {
     "test": "jest --coverage --silent --verbose",
     "precommit": "npm run postversion && npm run lint && npm run test && npm run build",
@@ -34,5 +25,22 @@
     "ts-jest": "^29.1.0",
     "typescript": "^5.0.2",
     "ws": "^8.13.0"
+  },
+  "license": "ISC",
+  "homepage": "https://simonkarman.github.io/krmx",
+  "contributors": [
+    {
+      "name": "Simon Karman",
+      "url": "https://www.simonkarman.nl",
+      "githubUsername": "simonkarman"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simonkarman/krmx.git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

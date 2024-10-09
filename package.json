@@ -1,7 +1,9 @@
 {
   "name": "@krmx/root",
-  "version": "0.6.0",
   "description": "Krmx is a network protocol for realtime multi-user interactions",
+  "author": "Simon Karman",
+  "version": "0.6.0",
+  "private": true,
   "scripts": {
     "postinstall": "npm --prefix base install && npm --prefix server install && npm --prefix client install && npm --prefix client-react install && npm --prefix state install && npm --prefix docs install",
     "audit:fix": "npm --prefix base audit fix && npm --prefix server audit fix && npm --prefix client audit fix && npm --prefix client-react audit fix && npm --prefix state audit fix && npm --prefix docs audit fix",
@@ -13,15 +15,26 @@
     "dev:client-react": "sleep 750 && npm run --prefix client-react dev",
     "dev:docs": "npm run --prefix docs dev"
   },
-  "author": "Simon Karman",
-  "license": "ISC",
+  "dependencies": {
+    "npm-run-all": "^4.1.5",
+    "husky": "^4.3.8"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "npm run precommit"
     }
   },
-  "dependencies": {
-    "npm-run-all": "^4.1.5",
-    "husky": "^4.3.8"
+  "license": "ISC",
+  "homepage": "https://simonkarman.github.io/krmx",
+  "contributors": [
+    {
+      "name": "Simon Karman",
+      "url": "https://www.simonkarman.nl",
+      "githubUsername": "simonkarman"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simonkarman/krmx.git"
   }
 }
