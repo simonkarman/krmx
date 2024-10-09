@@ -28,8 +28,6 @@ jobs:
           node-version: '22.x'
           registry-url: 'https://registry.npmjs.org'
           scope: '@krmx'
-      - name: Install Dependencies
-        run: npm install
       - name: Publish Packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -58,9 +56,10 @@ jobs:
                 sed -e "s|\"$pkg\": \"$path\"|\"$pkg\": \"^$version\"|" package.json > package.json.tmp
                 mv package.json.tmp package.json
               done
-              # Now have to reinstall as the package.json has changed
-              npm install
             fi
+
+            # Now we can install as the package.json has changed
+            npm install
 
             # Print information about the package
             cat package.json
