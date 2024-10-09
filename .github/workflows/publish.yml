@@ -46,6 +46,9 @@ jobs:
           else
             echo "[!!] Publishing is required."
 
+            # Install the package dependencies
+            npm install
+
             # Check if there are local dependencies in the package.json
             if jq -e '.dependencies | to_entries[] | select(.value | startswith("file:")) | length > 0' package.json &> /dev/null; then
               echo "Found local dependencies in package.json, updating them now."
@@ -53,13 +56,10 @@ jobs:
               while IFS="|" read -r pkg path; do
                 version=$(jq -r .version ${path#file:}/package.json)
                 echo "- Updating dependencies $pkg to ^$version (found in ${path#file:}/package.json)"
-                sed -e "s|\"$pkg\": \"$path\"|\"$pkg\": \"^$version\"|" package.json > package.json.tmp
-                mv package.json.tmp package.json
+                npm install $pkg@^$version
+                cat package-lock.json | jq .packages.'"node_modules/@krmx/$pkg"'
               done
             fi
-
-            # Now we can install as the package.json has changed
-            npm install
 
             # Print information about the package
             cat package.json
