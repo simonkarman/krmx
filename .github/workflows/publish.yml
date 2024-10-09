@@ -16,11 +16,14 @@ defaults:
 
 jobs:
   publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       max-parallel: 1 # has to be 1 (one) as there are dependencies between the published packages
       matrix:
-        package: [base, server]
-    runs-on: ubuntu-latest
+        package: [ base, server ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -69,5 +72,7 @@ jobs:
             npm run precommit
 
             # Publish the package
-            # npm publish --access public
+            if [ "${{ matrix.package }}" = "base" ]; then
+              npm publish --provenance --access public
+            fi
           fi 
