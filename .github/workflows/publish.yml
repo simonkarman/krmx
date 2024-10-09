@@ -30,8 +30,6 @@ jobs:
           scope: '@krmx'
       - name: Install Dependencies
         run: npm install
-      - name: Verify Build and Tests
-        run: npm --prefix ${{ matrix.package }} run precommit
       - name: Publish Packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -67,7 +65,10 @@ jobs:
             # Print information about the package
             cat package.json
             cat package-lock.json
+            
+            # Run tests and build the package
+            npm run precommit
 
-            # Now it is time to actually publish the package
+            # Publish the package
             # npm publish --access public
           fi 
