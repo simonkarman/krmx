@@ -23,7 +23,7 @@ jobs:
     strategy:
       max-parallel: 1 # has to be 1 (one) as there are dependencies between the published packages
       matrix:
-        package: [ base, server ]
+        package: [ base, server, client, client-react ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -60,19 +60,12 @@ jobs:
                 version=$(jq -r .version ${path#file:}/package.json)
                 echo "- Updating dependencies $pkg to ^$version (found in ${path#file:}/package.json)"
                 npm install $pkg@^$version
-                cat package-lock.json | jq .packages.'"node_modules/@krmx/$pkg"'
               done
             fi
-
-            # Print information about the package
-            cat package.json
-            cat package-lock.json
             
             # Run tests and build the package
             npm run precommit
 
             # Publish the package
-            if [ "${{ matrix.package }}" = "base" ]; then
-              npm publish --provenance --access public
-            fi
+            npm publish --provenance --access public
           fi 
