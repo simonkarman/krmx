@@ -6,13 +6,13 @@
   "main": "dist/src/index.js",
   "scripts": {
     "test": "jest --coverage --silent --verbose",
-    "precommit": "npm run clean && npm run lint && npm run test && npm run build",
+    "validate": "npm run clean && npm run lint && npm run test && npm run build",
     "postversion": "node -p \"'export const VERSION = \\'' + require('./package.json').version + '\\';'\" > src/version.ts",
     "build": "tsc",
     "clean": "rm -rf dist",
     "lint": "eslint --ext .ts",
     "dev": "npm run build -- --watch",
-    "prepublishOnly": "npm install && npm run precommit"
+    "prepublishOnly": "npm install && npm run validate"
   },
   "dependencies": {
     "@krmx/base": "^0.5.6",

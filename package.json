@@ -7,7 +7,7 @@
   "scripts": {
     "postinstall": "npm --prefix base install && npm --prefix server install && npm --prefix client install && npm --prefix client-react install && npm --prefix state install && npm --prefix docs install",
     "audit:fix": "npm --prefix base audit fix && npm --prefix server audit fix && npm --prefix client audit fix && npm --prefix client-react audit fix && npm --prefix state audit fix && npm --prefix docs audit fix",
-    "precommit": "npm install && npm run --prefix base precommit && npm run --prefix server precommit && npm run --prefix client precommit && npm run --prefix client-react precommit && npm run --prefix state precommit && npm run --prefix docs precommit",
+    "validate": "npm install && npm run --prefix base validate && npm run --prefix server validate && npm run --prefix client validate && npm run --prefix client-react validate && npm run --prefix state validate && npm run --prefix docs validate",
     "dev": "npm-run-all --parallel dev:*",
     "dev:base": "npm run --prefix base dev",
     "dev:server": "sleep 250 && npm run --prefix server dev",
@@ -21,7 +21,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run precommit"
+      "pre-commit": "npm run validate"
     }
   },
   "license": "ISC",

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "next",
     "build": "npm run sdk && next build && next export",
-    "precommit": "next lint && npm run build",
+    "validate": "next lint && npm run build",
     "sdk": "typedoc"
   },
   "dependencies": {

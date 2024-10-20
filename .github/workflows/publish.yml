@@ -74,7 +74,7 @@ jobs:
             fi
             
             # Run tests and build the package
-            npm run precommit
+            npm run validate
 
             # Publish the package
             npm publish --provenance --access public

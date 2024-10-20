@@ -13,7 +13,7 @@ If you want to help improve Krmx or add new features. You can create a pull requ
 - [client/](./client): reference implementation of a Krmx client in TypeScript (compatible NodeJS and browser)
 - [client-react/](./client-react): reference implementation of a Krmx client as a React hook
 - [state/](./state): Krmx State implementation, including base library, a server and a React client addon
-- [package.json](./package.json): root module that uses Husky to set up a pre-commit git hook that executes `npm run precommit` in every submodule
+- [package.json](./package.json): root module that uses Husky to set up a pre-commit git hook that executes `npm run validate` in every submodule
 
 The base, server, client, client-react, and state implementations are published on npm under the [krmx](https://www.npmjs.com/org/krmx) npmjs organisation.
 

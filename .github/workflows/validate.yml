@@ -15,4 +15,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate Packages
-        run: npm run precommit
+        run: npm run validate
