@@ -12,18 +12,7 @@ defaults:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        package: [ base, server, client, client-react ]
     steps:
       - uses: actions/checkout@v4
       - name: Validate Packages
-        run: |
-          cd ${{ matrix.package }}
-          echo "-- @krmx/${{ matrix.package }} --"
-
-          # Install the package dependencies
-          npm install
-
-          # Run tests and build the package
-          npm run precommit
+        run: npm run precommit
