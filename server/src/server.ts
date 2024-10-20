@@ -51,23 +51,6 @@ export interface Props {
   logger?: Logger | false;
 
   /**
-   * Whether metadata should be added to messages send over websocket connections.
-   *
-   * If set to true, each message send or broadcast to users will include a 'metadata' field in the root of the json message including the timestamp
-   *  it was sent and whether the message was a broadcast.
-   *
-   * Example of a message that was sent when metadata is set to true:
-   *  {
-   *    type: "custom/message",
-   *    payload: { value: 3 },
-   *    metadata: { isBroadcast: false, timestamp: "2023-04-07T19:17:11.432Z" },
-   *  }
-   *
-   * @default When not provided, no metadata will be added to messages.
-   */
-  metadata?: boolean;
-
-  /**
    * Whether the server should accept new users. If set to false, only users joined via server.join(<username>) can join the server.
    *
    * @default When not provided, the server will accept new users.
@@ -267,7 +250,6 @@ class ServerImpl extends EventGenerator<Events> implements Server {
   private readonly httpServer: http.Server;
   private readonly httpQueryParams: ExpectedQueryParams;
   private readonly logger: Logger;
-  private readonly metadata: boolean;
   private readonly acceptNewUsers: boolean;
   private readonly authTimeoutMilliseconds: number;
   private readonly isValidUsername: (username: string) => boolean;
@@ -296,7 +278,6 @@ class ServerImpl extends EventGenerator<Events> implements Server {
         severity !== 'debug' && console[severity](`[${severity}] [server]`, ...args);
       });
     }
-    this.metadata = props?.metadata ?? false;
     this.acceptNewUsers = props?.acceptNewUsers ?? true;
     this.authTimeoutMilliseconds = Math.max(1, props?.authTimeoutMilliseconds ?? 10_000);
     this.isValidUsername = props?.isValidUsername ?? ((username: string) => usernameRegex.test(username));
@@ -575,14 +556,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       throw new Error(`cannot send ${message.type} message to connection ${connectionId}, as that connection does not exist`);
     }
     if (connection.socket.readyState === ws.WebSocket.OPEN) {
-      const data = JSON.stringify({
-        ...message,
-        metadata: this.metadata ? {
-          // ...message.metadata, // TODO: ensure that exising metadata object gets merged (and what should happen if it is not an object?)
-          isBroadcast,
-          timestamp: DateTime.now().toUTC().toISO(),
-        } : undefined, // message.metadata, // TODO: ensure there too!
-      });
+      const data = JSON.stringify(message);
       connection.socket.send(data);
     } else {
       this.logger('debug', `could not send ${message.type} message to connection ${connectionId}, because the socket is not open`);

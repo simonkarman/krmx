@@ -35,31 +35,6 @@ describe('Krmx Server', () => {
     expect(logger).toHaveBeenCalledWith('info', expect.any(String));
   });
 
-  it('should add metadata to messages when server has metadata enabled',
-    withCustomServer({ metadata: true }, async({ server, addUser }) => {
-      const simon = await addUser('simon');
-      await sleep();
-      for (let callIndex = 0; callIndex < simon.emit.message.mock.calls.length; callIndex++) {
-        const call = simon.emit.message.mock.calls[callIndex];
-        expect(call[0]).toHaveProperty('metadata', { timestamp: expect.any(String), isBroadcast: expect.any(Boolean) });
-      }
-
-      // broadcast
-      simon.emit.message.mockClear();
-      server.broadcast({ type: 'custom/message' });
-      await sleep();
-      expect(simon.emit.message).toHaveBeenCalledWith({ type: 'custom/message', metadata: { timestamp: expect.any(String), isBroadcast: true } });
-      expect(simon.emit.message).toHaveBeenCalledTimes(1);
-
-      // send
-      simon.emit.message.mockClear();
-      server.send('simon', { type: 'custom/message' });
-      await sleep();
-      expect(simon.emit.message).toHaveBeenCalledWith({ type: 'custom/message', metadata: { timestamp: expect.any(String), isBroadcast: false } });
-      expect(simon.emit.message).toHaveBeenCalledTimes(1);
-    }),
-  );
-
   it('should not be allowed to close a server that is not running', async () => {
     const server = createServer();
     await expect(server.close()).rejects.toThrow('cannot close when the server is initializing');

@@ -7,14 +7,7 @@ To see what Krmx currently has to offer read the [Krmx documentation](https://si
 
 ### Krmx
 1. Server Metadata - Create a simplified way to create a http metadata/health endpoint on the Krmx server that can be used to verify that a server is still available and what the status of the server is (could include connected users, server version, etc.).
-2. Async Auth - Allow to authenticate in server to run async code (e.g. check with a database) before accepting a connection
-3. Integration Testing - Add a testing suite that tests complete integration for Krmx Server and Client implementations
-4. Remove Metadata - Unused metadata should be removed from the server code maintain simplicity
-
-### Krmx GitHub
-1. CI/CD Publish - Setup GitHub workflows for publishing of the individual package from the main branch 
-2. Pull Requests - Disable directly pushing to main and ensure feature branches run an integration test suite to verify functionality before merging
-3. Local Development - Ensure local development of Krmx is easy by ensure that all package reference the local file and run in watch mode.
+2. Integration Testing - Add a testing suite that tests complete integration for Krmx Server and Client implementations
 
 ### Krmx State
 1. Hot Reloading - Emit event that allows writing server state to disk on exit (or state change) and allow to restart a server with state
