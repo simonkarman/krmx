@@ -75,6 +75,14 @@ export interface Props {
   acceptNewUsers?: boolean;
 
   /**
+   * The timeout in milliseconds that the server should wait for the authentication process to complete. If the authentication process does not
+   *  complete within this time, the connection will be rejected. If a value smaller than 1 is provided, 1 will be used.
+   *
+   * @default When not provided, the server will wait a maximum of 10_000 milliseconds (10 seconds) for the authentication process to complete.
+   */
+  authTimeoutMilliseconds?: number;
+
+  /**
    * A predicate that determines what the server should consider to be a valid username.
    *
    * @default When not provided, the server will validate usernames using the username regex (exported by Krmx as usernameRegex).
@@ -125,16 +133,17 @@ export type Events = {
    *             info.isNewUser -- Whether this username belongs to a user already known to the server (false) or a new user that will be created if linking succeeds (true).
    *             info.auth -- An authentication token as a string, if provided by the client. That can be used to verify the authentication of the user. For example a JWT token.
    * @param reject A reject callback that, if invoked, will reject the linking to the user with the provided reason.
-   * @param async A function that returns a function that can be called to indicate that the authentication process is asynchronous and that the
-   *              server should wait for the asynchronous process to finish before continuing. The returned function should be called when the
-   *              asynchronous process is done. If the returned function is not called, the server will wait indefinitely. You can reject the
-   *              linking to the user at any time by calling the reject callback.
+   * @param async A callback that can be used to indicate that the authentication process is asynchronous. The first argument to this function is an
+   *              async handler function. The server will wait for the asynchronous handler to resolve or reject. You can reject the linking to the
+   *              user at any time by calling the reject callback or rejecting from the handler.
+   *
+   * Note: If the 'async' callback is not invoked, the server will assume that the authentication process is synchronous.
    */
   authenticate: [
     username: string,
     info: { isNewUser: boolean, auth?: string },
     reject: (reason: string) => void,
-    usePromise: (handler: () => Promise<void>) => void,
+    async: (handler: () => Promise<void>) => void,
   ];
 
   /**
@@ -259,6 +268,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
   private readonly logger: Logger;
   private readonly metadata: boolean;
   private readonly acceptNewUsers: boolean;
+  private readonly authTimeout: number;
   private readonly isValidUsername: (username: string) => boolean;
   private readonly pingIntervalMilliseconds: number;
 
@@ -287,6 +297,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     }
     this.metadata = props?.metadata ?? false;
     this.acceptNewUsers = props?.acceptNewUsers ?? true;
+    this.authTimeout = Math.max(1, props?.authTimeoutMilliseconds ?? 10_000);
     this.isValidUsername = props?.isValidUsername ?? ((username: string) => usernameRegex.test(username));
     this.pingIntervalMilliseconds = props?.pingIntervalMilliseconds ?? 15_000;
 
@@ -415,8 +426,10 @@ class ServerImpl extends EventGenerator<Events> implements Server {
   }
   private async onUnlinkedConnectionMessage(connectionId: string, message: FromClientMessage | Message): Promise<void> {
     let rejected = false;
+    let timeoutResolver = () => { /*none*/ };
     const reject = (reason: string) => {
       if (rejected) { return; }
+      timeoutResolver();
       this.logger('debug', `connection ${connectionId} rejected, due to: ${reason}`);
       const userRejectedMessage: RejectedMessage = { type: 'krmx/rejected', payload: { reason } };
       this.sendTo(connectionId, userRejectedMessage, false);
@@ -455,8 +468,39 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       return;
     }
     const promises: Promise<void>[] = [];
-    this.emit('authenticate', username, { isNewUser, auth }, reject, (handler) => { promises.push(handler()); });
-    await Promise.all(promises);
+    const errors = this.emit('authenticate', username, { isNewUser, auth }, reject, (handler) => { promises.push(handler()); });
+    const rejectFromError = (err: unknown) => {
+      if (err instanceof Error) {
+        reject(err.message);
+      } else {
+        this.logger('error', `connection ${connectionId} rejected, due to an unknown error during authentication:`, err);
+        if (typeof err === 'string') {
+          reject(err);
+        } else {
+          reject('authentication failed');
+        }
+      }
+    };
+    if (errors.length > 0) {
+      rejectFromError(errors[0]);
+    } else {
+      try {
+        if (promises.length > 0) {
+          await Promise.race([
+            new Promise<void>((resolve) => {
+              timeoutResolver = resolve; // allows to resolve the promise immediately on rejection
+              setTimeout(() => {
+                reject('authentication timeout');
+                resolve();
+              }, this.authTimeout);
+            }),
+            await Promise.all(promises),
+          ]);
+        }
+      } catch (err: unknown) {
+        rejectFromError(err);
+      }
+    }
     if (rejected) {
       return;
     }
