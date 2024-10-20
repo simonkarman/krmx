@@ -1,6 +1,5 @@
 import http from 'http';
-import { DateTime } from 'luxon';
-import short from 'short-uuid';
+import { randomBytes } from 'node:crypto';
 import ws, { AddressInfo, RawData, WebSocket, WebSocketServer } from 'ws';
 import {
   EventGenerator, EventEmitter, Logger, LogSeverity, FromServerMessage, FromClientMessage,
@@ -358,7 +357,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       return;
     }
 
-    const connectionId = `cn-${short.generate()}`;
+    const connectionId = `cn-${randomBytes(20).toString('hex')}`;
     this.connections[connectionId] = { socket, isAlive: true };
     this.logger('debug', `connection ${connectionId} opened`);
 
