@@ -311,11 +311,9 @@ class ClientImpl extends EventGenerator<Events> implements Client {
       if (krmxMessage.payload.username === this.username) {
         this.username = undefined;
       }
-      // The above code is confusing. Some fields are reset before and some after the emit. This is because the client should no longer be in the
+      // The above code is confusing. Some fields are reset before and some after emitting. This is because the client should no longer be in the
       //  'linked' state as the event is emitted, but we do still require the username to be set, so that the listeners to the 'unlink' event can
       //  still check if this was a self unlink.
-      // TODO: this confusion could be cleared up, if after unlinking, the server would emit a 'ready-to-(re)link' message. This would also mean the
-      //        krmx/accepted message could be replaced with the krmx/ready-to-link message for consistency.
       break;
     case 'krmx/left':
       delete this.users[krmxMessage.payload.username];
@@ -360,7 +358,7 @@ class ClientImpl extends EventGenerator<Events> implements Client {
   public leave(): Promise<void> {
     return new Promise<void>((resolve) => {
       this.canOnly('leave', 'linked');
-      this.status = 'connected';
+      this.status = 'unlinking';
       this.emit('unlinking');
 
       // Notice: even tho this is a 'leave' function, 'unlink' is correct here. This is because the 'unlink' event is the last we receive for

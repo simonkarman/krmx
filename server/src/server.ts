@@ -80,6 +80,16 @@ export interface Props {
    * @default When not provided, the server will validate usernames using the username regex (exported by Krmx as usernameRegex).
    */
   isValidUsername?: (username: string) => boolean;
+
+  /**
+   * The interval in milliseconds at which the server should ping all connections to check if they are still alive. If the number is set to a value 0
+   *  or less, the server will not ping connections.
+   *
+   * If when a connection has not responded to a ping before the server sends out the next ping, the connection will be terminated.
+   *
+   * @default When not provided, the server will ping connections every 15_000 milliseconds (15 seconds).
+   */
+  pingIntervalMilliseconds?: number;
 }
 
 /**
@@ -241,8 +251,10 @@ class ServerImpl extends EventGenerator<Events> implements Server {
   private readonly metadata: boolean;
   private readonly acceptNewUsers: boolean;
   private readonly isValidUsername: (username: string) => boolean;
+  private readonly pingIntervalMilliseconds: number;
 
-  private readonly connections: { [connectionId: string]: { socket: ws.WebSocket, username?: string } } = {};
+  private pingInterval: ReturnType<typeof setInterval> | undefined;
+  private readonly connections: { [connectionId: string]: { socket: ws.WebSocket, isAlive: boolean, username?: string } } = {};
   private readonly users: { [username: string]: { connectionId?: string } } = {};
   private status: Status;
   private canOnly(action: string, when: Status[] | Status): void {
@@ -267,6 +279,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     this.metadata = props?.metadata ?? false;
     this.acceptNewUsers = props?.acceptNewUsers ?? true;
     this.isValidUsername = props?.isValidUsername ?? ((username: string) => usernameRegex.test(username));
+    this.pingIntervalMilliseconds = props?.pingIntervalMilliseconds ?? 15_000;
 
     this.status = 'initializing';
     this.httpServer = props?.http?.server ?? new http.Server();
@@ -306,6 +319,25 @@ class ServerImpl extends EventGenerator<Events> implements Server {
   }
   private onServerListening() {
     this.status = 'listening';
+    if (this.pingIntervalMilliseconds > 0) {
+      this.pingInterval = setInterval(() => {
+        for (const connectionId in this.connections) {
+          const connection = this.connections[connectionId];
+          if (connection.isAlive) {
+            if (connection.socket.readyState === ws.WebSocket.OPEN) {
+              connection.socket.ping(connectionId);
+            }
+            connection.isAlive = false;
+          } else {
+            if (connection.username !== undefined) {
+              this.logger('info', `${connection.username} has unlinked due too unresponsiveness`);
+            }
+            this.logger('debug', `connection ${connectionId} is terminated due to unresponsiveness`);
+            connection.socket.terminate();
+          }
+        }
+      }, this.pingIntervalMilliseconds);
+    }
     const address = this.httpServer.address() as AddressInfo;
     this.logger('info', `listening on port ${address.port}`);
     this.emit('listen', address.port);
@@ -319,16 +351,22 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     }
 
     if (!hasExpectedQueryParams(this.httpQueryParams, request.url)) {
-      this.logger('debug', 'incoming connection is immediately terminated as its query parameters are invalid');
-      socket.terminate();
+      this.logger('debug', 'incoming connection is immediately closed as its query parameters are invalid');
+      socket.close();
       return;
     }
 
     const connectionId = `cn-${short.generate()}`;
-    this.connections[connectionId] = { socket };
+    this.connections[connectionId] = { socket, isAlive: true };
     this.logger('debug', `connection ${connectionId} opened`);
 
     socket.on('message', this.onConnectionData.bind(this, connectionId));
+    socket.on('pong', (data) => {
+      const pong = data.toString('utf-8');
+      if (pong in this.connections) {
+        this.connections[pong].isAlive = true;
+      }
+    });
     socket.on('close', this.onConnectionClosed.bind(this, connectionId));
   }
   private tryParse(data: RawData): Message | false {
@@ -466,6 +504,9 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     });
   }
   private onServerClose(): void {
+    if (this.pingInterval !== undefined) {
+      clearInterval(this.pingInterval);
+    }
     this.status = 'closed';
     this.logger('info', 'server closed');
     this.emit('close');

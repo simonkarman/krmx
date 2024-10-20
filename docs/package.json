@@ -1,15 +1,13 @@
 {
   "name": "@krmx/docs",
-  "version": "0.4.0",
-  "author": "Simon Karman",
-  "license": "ISC",
-  "homepage": "https://simonkarman.github.io/krmx",
   "description": "krmx documentation",
+  "author": "Simon Karman",
+  "version": "0.6.0",
   "private": true,
   "scripts": {
-    "start": "next",
+    "dev": "next",
     "build": "npm run sdk && next build && next export",
-    "precommit": "next lint && npm run build",
+    "validate": "next lint && npm run build",
     "sdk": "typedoc"
   },
   "dependencies": {
@@ -23,8 +21,25 @@
     "autoprefixer": "^10.4.14",
     "eslint": "8.46.0",
     "eslint-config-next": "13.4.13",
-    "postcss": "^8.4.27",
+    "postcss": "8.4.31",
     "tailwindcss": "^3.3.3",
     "typedoc": "^0.25.9"
+  },
+  "license": "ISC",
+  "homepage": "https://simonkarman.github.io/krmx",
+  "contributors": [
+    {
+      "name": "Simon Karman",
+      "url": "https://www.simonkarman.nl",
+      "githubUsername": "simonkarman"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simonkarman/krmx.git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

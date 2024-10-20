@@ -1,27 +1,24 @@
 {
   "name": "@krmx/state",
+  "description": "krmx state",
+  "author": "Simon Karman",
   "version": "0.0.1",
   "main": "dist/src/index.js",
-  "author": "Simon Karman",
-  "contributors": [
-    {
-      "name": "Simon Karman",
-      "url": "https://www.simonkarman.nl",
-      "githubUsername": "simonkarman"
-    }
-  ],
-  "license": "ISC",
-  "homepage": "https://simonkarman.github.io/krmx",
-  "description": "krmx state",
   "scripts": {
     "test": "jest --coverage --silent --verbose",
-    "precommit": "npm run clean && npm run lint && npm run test && npm run build",
+    "validate": "npm run clean && npm run lint && npm run test && npm run build",
     "postversion": "node -p \"'export const VERSION = \\'' + require('./package.json').version + '\\';'\" > src/version.ts",
     "build": "tsc",
     "clean": "rm -rf dist",
     "lint": "eslint --ext .ts",
     "dev": "npm run build -- --watch",
-    "prepublishOnly": "npm install && npm run precommit"
+    "prepublishOnly": "npm install && npm run validate"
+  },
+  "dependencies": {
+    "@krmx/base": "^0.5.6",
+    "immer": "^10.1.1",
+    "jsondiffpatch": "0.5.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/jest": "^29.5.1",
@@ -34,10 +31,21 @@
     "ts-jest": "^29.1.0",
     "typescript": "^5.0.2"
   },
-  "dependencies": {
-    "@krmx/base": "^0.5.6",
-    "immer": "^10.1.1",
-    "jsondiffpatch": "0.5.0",
-    "zod": "^3.23.8"
+  "license": "ISC",
+  "homepage": "https://simonkarman.github.io/krmx",
+  "contributors": [
+    {
+      "name": "Simon Karman",
+      "url": "https://www.simonkarman.nl",
+      "githubUsername": "simonkarman"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simonkarman/krmx.git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

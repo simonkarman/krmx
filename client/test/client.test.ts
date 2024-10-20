@@ -337,6 +337,18 @@ describe('createClient', () => {
     // Clean up
     await server.close();
   });
+  it('should respond with pong messages when a server sends a ping', async () => {
+    const server = createServer({ pingIntervalMilliseconds: 500 });
+    const portNumber = await server.listen();
+
+    const simon = createClient();
+    await simon.connect(`ws://localhost:${portNumber}`);
+    await simon.link('simon');
+    await sleep(750);
+
+    await simon.disconnect(true);
+    await server.close();
+  });
 
   // TODO: Verify all events are emitted by the client
   // TODO: Test for non-Krmx WebSocket server

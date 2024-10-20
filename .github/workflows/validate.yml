@@ -1,0 +1,21 @@
+name: Validate packages
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+      - name: Validate Packages
+        run: npm run validate
