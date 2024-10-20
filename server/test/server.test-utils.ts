@@ -27,7 +27,7 @@ export interface User {
   close: () => void;
 }
 
-export function withServer<TScenario>(callback: (props: {
+export function withServer<TScenario = number>(callback: (props: {
   server: Server,
   serverEmit: ServerEmit,
   addUser: (username?: string, auth?: string) => Promise<User>,
@@ -36,7 +36,7 @@ export function withServer<TScenario>(callback: (props: {
   return withCustomServer({}, callback, scenarios);
 }
 
-export function withCustomServer<TScenario>(serverProps: Props, callback: (props: {
+export function withCustomServer<TScenario = number>(serverProps: Props, callback: (props: {
   server: Server,
   serverEmit: ServerEmit,
   addUser: (username?: string, auth?: string) => Promise<User>,

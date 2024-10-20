@@ -655,4 +655,48 @@ describe('Krmx Server', () => {
     await server.close();
     websocketClient.close();
   });
+
+  it('should allow authenticate to be asynchronous', withCustomServer({ authTimeoutMilliseconds: 500 }, async ({ server, addUser }) => {
+    server.on('authenticate', (username, _, reject) => {
+      if (username === 'marjolein') {
+        reject('immediately rejected');
+      }
+      if (username === 'rens') {
+        throw new Error('immediately rejected by throw');
+      }
+    });
+    server.on('authenticate', (username, _, reject, async) => async(async () => {
+      await sleep(250);
+      if (username === 'simon') {
+        reject('slowly rejected');
+      }
+      if (username === 'govie') {
+        throw 'slowly rejected by throwing';
+      }
+      if (username === 'jac') {
+        throw new Error('slowly rejected by throwing an error');
+      }
+      if (username === 'tim') {
+        throw { something: 'else' };
+      }
+      if (username === 'rik') {
+        console.info('different error:', (undefined as unknown as string).length);
+      }
+      if (username === 'kevin') {
+        await sleep(2000); // should be rejected by timeout
+      }
+    }));
+    await expect(addUser('simon')).rejects.toBe('slowly rejected');
+    await expect(addUser('govie')).rejects.toBe('slowly rejected by throwing');
+    await expect(addUser('jac')).rejects.toBe('slowly rejected by throwing an error');
+    await expect(addUser('tim')).rejects.toBe('authentication failed');
+    await expect(addUser('rik')).rejects.toBe('Cannot read properties of undefined (reading \'length\')');
+    await expect(addUser('kevin')).rejects.toBe('authentication timeout');
+    await addUser('lisa');
+
+    const time = Date.now();
+    await expect(addUser('marjolein')).rejects.toBe('immediately rejected');
+    expect(Date.now() - time).toBeLessThan(100); // should be rejected immediately
+    await expect(addUser('rens')).rejects.toBe('immediately rejected by throw');
+  }));
 });
