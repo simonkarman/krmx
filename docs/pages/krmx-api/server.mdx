@@ -67,6 +67,9 @@ See the [Server](/sdk/interfaces/Krmx_Server.Server.html) interface for more inf
 ### User Authentication
 Right before a connection links to a user, the server emits an authenticate event with some information about the connection. Within this listener you have the ability to reject that connection from linking to the user.
 
+#### Synchronous
+The `authenticate` event listener can be used in a synchronous context. This is useful when you need to perform a synchronous operation, such as validating the amount of users already on the server.
+
 ```ts
 import { Server } from '@krmx/server';
 declare const server: Server;
@@ -76,15 +79,27 @@ server.on('authenticate', (username, info, reject) => {
     if (info.isNewUser && server.getUsers().length >= 10) {
         reject('server is full');
     }
-
-    // example: validate authentication -- where `checkValidAuth` is a custom method that
-    //                                     can validate the auth value provided by the
-    //                                     client.
-    if (info.auth === undefined || !checkValidAuth(username, info.auth)) {
-        reject('authentication failed');
-    }
 });
 ```
+
+See the server [Events](/sdk/types/Krmx_Server.Events.html) type for more information about the authenticate event.
+
+#### Asynchronous
+The `authenticate` event listener can be used in an async context. This is useful when you need to perform an asynchronous operation, such as a database query, to validate the authentication.
+
+```ts
+import { Server } from '@krmx/server';
+declare const server: Server;
+
+server.on('authenticate', (username, info, reject, markAsync) => markAsync(async () => {
+    // example: authenticate a user using a database query
+    if (info.auth === undefined || !await myAsyncDatabaseQuery(username, info.auth)) {
+        reject('authentication failed');
+    }
+}));
+```
+
+> Note: The fourth argument in the authenticate event listener is the `markAsync` function. This function is a helper function that wraps the async handler. This allows you to use `await` to perform asynchronous operations.
 
 See the server [Events](/sdk/types/Krmx_Server.Events.html) type for more information about the authenticate event.
 

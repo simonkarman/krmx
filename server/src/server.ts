@@ -134,8 +134,8 @@ export type Events = {
    *             info.isNewUser -- Whether this username belongs to a user already known to the server (false) or a new user that will be created if linking succeeds (true).
    *             info.auth -- An authentication token as a string, if provided by the client. That can be used to verify the authentication of the user. For example a JWT token.
    * @param reject A reject callback that, if invoked, will reject the linking to the user with the provided reason.
-   * @param async A callback that can be used to indicate that the authentication process is asynchronous. The first argument to this function is an
-   *              async handler function. The server will wait for the asynchronous handler to resolve or reject. You can reject the linking to the
+   * @param markAsync A callback that can be used to indicate that the authentication process is asynchronous. The first argument to this function is
+   *              an async handler function. The server will wait for the asynchronous handler to resolve or reject. You can reject the linking to the
    *              user at any time by calling the reject callback or rejecting from the handler.
    *
    * Note: If the 'async' callback is not invoked, the server will assume that the authentication process is synchronous.
@@ -144,7 +144,7 @@ export type Events = {
     username: string,
     info: { isNewUser: boolean, auth?: string },
     reject: (reason: string) => void,
-    async: (handler: () => Promise<void>) => void,
+    markAsync: (handler: () => Promise<void>) => void,
   ];
 
   /**
