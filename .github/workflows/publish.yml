@@ -43,8 +43,8 @@ jobs:
           REMOTE_VERSION=$(npm show "@krmx/${{ matrix.package }}" version)
           echo "Remote version: $REMOTE_VERSION"
 
-          if [ "$LOCAL_VERSION" = "$REMOTE_VERSION" ]; then
-            echo "[!!] Publishing skipped as the version is already published."
+          if ! .github/tools/semver-greater.sh "$REMOTE_VERSION" "$LOCAL_VERSION"; then
+            echo "[!!] Skipped publish as the local version of @krmx/${{ matrix.package }} is not greater than what is already published."
           else
             echo "[!!] Publishing is required."
 
@@ -59,6 +59,17 @@ jobs:
                 version=$(jq -r .version ${path#file:}/package.json)
                 echo "- Updating dependencies $pkg to ^$version (found in ${path#file:}/package.json)"
                 npm install $pkg@^$version
+              done
+            fi
+
+            # Check if there are local dev dependencies in the package.json
+            if jq -e '.devDependencies | to_entries[] | select(.value | startswith("file:")) | length > 0' package.json &> /dev/null; then
+              echo "Found local dev dependencies in package.json, updating them now."
+              jq -r '.devDependencies | to_entries[] | select(.value | startswith("file:")) | .key + "|" + .value' package.json |
+              while IFS="|" read -r pkg path; do
+                version=$(jq -r .version ${path#file:}/package.json)
+                echo "- Updating dev dependencies $pkg to ^$version (found in ${path#file:}/package.json)"
+                npm install $pkg@^$version --save-dev
               done
             fi
             
