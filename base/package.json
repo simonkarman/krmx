@@ -2,7 +2,7 @@
   "name": "@krmx/base",
   "description": "krmx base",
   "author": "Simon Karman",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "main": "dist/src/index.js",
   "scripts": {
     "test": "jest --coverage --silent --verbose",
