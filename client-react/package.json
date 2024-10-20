@@ -2,7 +2,7 @@
   "name": "@krmx/client-react",
   "description": "krmx client for react",
   "author": "Simon Karman",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "main": "dist/src/index.js",
   "scripts": {
     "test": "jest --coverage --silent --verbose",
