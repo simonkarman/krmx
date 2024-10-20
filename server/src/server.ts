@@ -125,8 +125,17 @@ export type Events = {
    *             info.isNewUser -- Whether this username belongs to a user already known to the server (false) or a new user that will be created if linking succeeds (true).
    *             info.auth -- An authentication token as a string, if provided by the client. That can be used to verify the authentication of the user. For example a JWT token.
    * @param reject A reject callback that, if invoked, will reject the linking to the user with the provided reason.
+   * @param async A function that returns a function that can be called to indicate that the authentication process is asynchronous and that the
+   *              server should wait for the asynchronous process to finish before continuing. The returned function should be called when the
+   *              asynchronous process is done. If the returned function is not called, the server will wait indefinitely. You can reject the
+   *              linking to the user at any time by calling the reject callback.
    */
-  authenticate: [username: string, info: { isNewUser: boolean, auth?: string }, reject: (reason: string) => void];
+  authenticate: [
+    username: string,
+    info: { isNewUser: boolean, auth?: string },
+    reject: (reason: string) => void,
+    usePromise: (handler: () => Promise<void>) => void,
+  ];
 
   /**
    * This event is emitted every time a user has joined.
@@ -384,12 +393,12 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       return false;
     }
   }
-  private onConnectionData(connectionId: string, data: RawData): void {
+  private async onConnectionData(connectionId: string, data: RawData): Promise<void> {
     const connection = this.connections[connectionId];
     const message = this.tryParse(data);
     if (message) {
       if (connection.username === undefined) {
-        this.onUnlinkedConnectionMessage(connectionId, message);
+        await this.onUnlinkedConnectionMessage(connectionId, message);
       } else {
         this.onLinkedConnectionMessage(connection.username, message);
       }
@@ -404,7 +413,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       }
     }
   }
-  private onUnlinkedConnectionMessage(connectionId: string, message: FromClientMessage | Message) {
+  private async onUnlinkedConnectionMessage(connectionId: string, message: FromClientMessage | Message): Promise<void> {
     let rejected = false;
     const reject = (reason: string) => {
       if (rejected) { return; }
@@ -445,7 +454,9 @@ class ServerImpl extends EventGenerator<Events> implements Server {
       reject(`user ${username} is already linked to a connection`);
       return;
     }
-    this.emit('authenticate', username, { isNewUser, auth }, reject);
+    const promises: Promise<void>[] = [];
+    this.emit('authenticate', username, { isNewUser, auth }, reject, (handler) => { promises.push(handler()); });
+    await Promise.all(promises);
     if (rejected) {
       return;
     }

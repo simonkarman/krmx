@@ -655,4 +655,24 @@ describe('Krmx Server', () => {
     await server.close();
     websocketClient.close();
   });
+
+  it('should allow authenticate to be asynchronous', withServer(async ({ server, addUser }) => {
+    server.on('authenticate', async (username, info, reject) => {
+      if (info.isNewUser && username === 'marjolein') {
+        reject('immediately rejected');
+      }
+    });
+    server.on('authenticate', async (username, info, reject, usePromise) => usePromise(async () => {
+      await sleep(250);
+      if (info.isNewUser && username === 'simon') {
+        reject('slowly rejected');
+      }
+    }));
+    await expect(addUser('simon')).rejects.toBe('slowly rejected');
+    await addUser('lisa');
+
+    const time = Date.now();
+    await expect(addUser('marjolein')).rejects.toBe('immediately rejected');
+    expect(Date.now() - time).toBeLessThan(100); // should be rejected immediately
+  }));
 });
