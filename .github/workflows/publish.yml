@@ -43,7 +43,7 @@ jobs:
           REMOTE_VERSION=$(npm show "@krmx/${{ matrix.package }}" version)
           echo "Remote version: $REMOTE_VERSION"
 
-          if ! .github/tools/semver-greater.sh "$REMOTE_VERSION" "$LOCAL_VERSION"; then
+          if ! ../.github/tools/semver-greater.sh "$REMOTE_VERSION" "$LOCAL_VERSION"; then
             echo "[!!] Skipped publish as the local version of @krmx/${{ matrix.package }} is not greater than what is already published."
           else
             echo "[!!] Publishing is required."
