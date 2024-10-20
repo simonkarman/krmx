@@ -61,7 +61,7 @@ jobs:
               while IFS="|" read -r pkg path; do
                 version=$(jq -r .version ${path#file:}/package.json)
                 echo "- Updating dependencies $pkg to ^$version (found in ${path#file:}/package.json)"
-                npm install $pkg@^$version
+                npm install $pkg@^$version --prefer-online
               done
             fi
 
@@ -72,7 +72,7 @@ jobs:
               while IFS="|" read -r pkg path; do
                 version=$(jq -r .version ${path#file:}/package.json)
                 echo "- Updating dev dependencies $pkg to ^$version (found in ${path#file:}/package.json)"
-                npm install $pkg@^$version --save-dev
+                npm install $pkg@^$version --save-dev --prefer-online
               done
             fi
             
