@@ -30,10 +30,9 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
-      - name: Use Node.js 18.x
-        uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: '22.x'
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v3
