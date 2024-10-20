@@ -48,6 +48,9 @@ jobs:
           else
             echo "[!!] Publishing is required."
 
+            # Clean the npm cache before potentially installing recently published packages
+            npm cache clean --force
+
             # Install the package dependencies
             npm install
 
