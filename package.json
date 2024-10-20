@@ -13,7 +13,8 @@
     "dev:server": "sleep 250 && npm run --prefix server dev",
     "dev:client": "sleep 500 && npm run --prefix client dev",
     "dev:client-react": "sleep 750 && npm run --prefix client-react dev",
-    "dev:docs": "npm run --prefix docs dev"
+    "dev:docs": "npm run --prefix docs dev",
+    "versions": "npm install && npm --prefix base run postversion && npm --prefix server run postversion && npm --prefix client run postversion && npm --prefix client-react run postversion && npm --prefix state run versions"
   },
   "dependencies": {
     "npm-run-all": "^4.1.5",
