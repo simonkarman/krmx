@@ -91,7 +91,8 @@ export interface Props {
 
   /**
    * The interval in milliseconds at which the server should ping all connections to check if they are still alive. If the number is set to a value 0
-   *  or less, the server will not ping connections.
+   *  or less, the server will not ping connections. If the value is set to a value between 1 and 100, the server will ping connections every 100
+   *  milliseconds instead.
    *
    * If when a connection has not responded to a ping before the server sends out the next ping, the connection will be terminated.
    *
@@ -268,7 +269,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
   private readonly logger: Logger;
   private readonly metadata: boolean;
   private readonly acceptNewUsers: boolean;
-  private readonly authTimeout: number;
+  private readonly authTimeoutMilliseconds: number;
   private readonly isValidUsername: (username: string) => boolean;
   private readonly pingIntervalMilliseconds: number;
 
@@ -297,9 +298,9 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     }
     this.metadata = props?.metadata ?? false;
     this.acceptNewUsers = props?.acceptNewUsers ?? true;
-    this.authTimeout = Math.max(1, props?.authTimeoutMilliseconds ?? 10_000);
+    this.authTimeoutMilliseconds = Math.max(1, props?.authTimeoutMilliseconds ?? 10_000);
     this.isValidUsername = props?.isValidUsername ?? ((username: string) => usernameRegex.test(username));
-    this.pingIntervalMilliseconds = props?.pingIntervalMilliseconds ?? 15_000;
+    this.pingIntervalMilliseconds = Math.max(0, props?.pingIntervalMilliseconds ?? 15_000);
 
     this.status = 'initializing';
     this.httpServer = props?.http?.server ?? new http.Server();
@@ -356,7 +357,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
             connection.socket.terminate();
           }
         }
-      }, this.pingIntervalMilliseconds);
+      }, Math.max(100, this.pingIntervalMilliseconds));
     }
     const address = this.httpServer.address() as AddressInfo;
     this.logger('info', `listening on port ${address.port}`);
@@ -492,7 +493,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
               setTimeout(() => {
                 reject('authentication timeout');
                 resolve();
-              }, this.authTimeout);
+              }, this.authTimeoutMilliseconds);
             }),
             await Promise.all(promises),
           ]);
