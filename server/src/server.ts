@@ -116,11 +116,12 @@ export type Events = {
    *             info.isNewUser -- Whether this username belongs to a user already known to the server (false) or a new user that will be created if linking succeeds (true).
    *             info.auth -- An authentication token as a string, if provided by the client. That can be used to verify the authentication of the user. For example a JWT token.
    * @param reject A reject callback that, if invoked, will reject the linking to the user with the provided reason.
-   * @param markAsync A callback that can be used to indicate that the authentication process is asynchronous. The first argument to this function is
+   * @param markAsync A method that can be invoked to indicate that the authentication process is asynchronous. The first argument to this function is
    *              an async handler function. The server will wait for the asynchronous handler to resolve or reject. You can reject the linking to the
-   *              user at any time by calling the reject callback or rejecting from the handler.
+   *              user at any time by calling the reject callback or rejecting from the handler. If the async handler does not resolve or reject within
+   *              the timeout, the connection will be rejected. The timeout is set by the 'authTimeoutMilliseconds' property of the server.
    *
-   * Note: If the 'async' callback is not invoked, the server will assume that the authentication process is synchronous.
+   * Note: If the 'markAsync' function is not invoked, the server will assume that the authentication process is synchronous.
    */
   authenticate: [
     username: string,
