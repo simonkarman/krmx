@@ -84,7 +84,8 @@ For client-side usage in React applications, you'll need to register the Project
 ```ts
 // in krmx.ts
 import { createClient } from '@krmx/client-react';
-import { registerProjection } from '@krmx/state-client-react';mport { cardsModel } from 'file:../shared'; // reference your shared code package here
+import { registerProjection } from '@krmx/state-client-react';
+import { cardsModel } from 'file:../shared'; // reference your shared code package here
 
 export const { client, useClient } = createClient();
 export const {
@@ -115,7 +116,7 @@ export const MyComponent = () => {
 
 In this setup, all clients connected to the server will receive updates to the Projection model automatically. This ensures that your application's state remains synchronized across all connected clients.
 
-> Using `dispatchCounter(increment(3))` vs `client.send(increment(3))`. Both would work, however by using the dispatchCounter you ensure that you benefit from optimistic updates on this client while the server is still processing the validity of the event. If the server would invalidate the event the optimistic update is automatically pruned from the optimistic state.
+> Using `dispatchCardsAction(draw())` vs `client.send(draw())`. Both would work, however by using the dispatchCardsAction you ensure that you benefit from optimistic updates on this client while the server is still processing the validity of the event. If the server would invalidate the event the optimistic update is automatically pruned from the optimistic state.
 
 ## More Information
 Take a look at the [TypeScript SDK reference](/sdk/classes/Krmx_State_Base.ProjectionModel.html) and [source code](https://github.com/simonkarman/krmx/blob/main/state/base/src/models/projection/model.ts) to learn more about the Projection model.
