@@ -2,7 +2,7 @@
   "name": "@krmx/state",
   "description": "krmx state",
   "author": "Simon Karman",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "dist/src/index.js",
   "scripts": {
     "test": "jest --coverage --silent --verbose",
@@ -15,7 +15,7 @@
     "prepublishOnly": "npm install && npm run validate"
   },
   "dependencies": {
-    "@krmx/base": "^0.5.6",
+    "@krmx/base": "^0.6.3",
     "immer": "^10.1.1",
     "jsondiffpatch": "0.5.0",
     "zod": "^3.23.8"
@@ -46,6 +46,6 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   }
 }
