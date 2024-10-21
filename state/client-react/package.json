@@ -2,7 +2,7 @@
   "name": "@krmx/state-client-react",
   "description": "krmx state client for react",
   "author": "Simon Karman",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "dist/src/index.js",
   "scripts": {
     "test": "jest --coverage --silent --verbose",
@@ -13,9 +13,9 @@
     "prepublishOnly": "npm install && npm run validate"
   },
   "dependencies": {
-    "@krmx/base": "^0.5.6",
-    "@krmx/client": "^0.5.4",
-    "@krmx/state": "^0.0.1"
+    "@krmx/base": "^0.6.3",
+    "@krmx/client": "^0.6.3",
+    "@krmx/state": "^0.0.2"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0"
@@ -23,7 +23,7 @@
   "devDependencies": {
     "@babel/preset-env": "^7.22.5",
     "@babel/preset-react": "^7.22.5",
-    "@krmx/server": "^0.5.4",
+    "@krmx/server": "^0.6.7",
     "@types/jest": "^29.5.1",
     "@types/react-test-renderer": "^18.0.0",
     "@types/ws": "^8.5.9",
@@ -56,6 +56,6 @@
   },
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": false
   }
 }

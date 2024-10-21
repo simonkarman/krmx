@@ -6,7 +6,7 @@
   "scripts": {
     "postinstall": "npm --prefix base install && npm --prefix server install && npm --prefix client-react install",
     "validate": "npm run --prefix base validate && npm run --prefix server validate && npm run --prefix client-react validate",
-    "versions": "npm --prefix base run postversion && npm --prefix server run postversion && npm --prefix client-react run postversion"
+    "versions": "npm install && npm --prefix base run postversion && npm --prefix server run postversion && npm --prefix client-react run postversion"
   },
   "devDependencies": {
     "husky": "^4.3.8"
