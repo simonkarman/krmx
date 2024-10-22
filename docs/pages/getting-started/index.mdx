@@ -80,12 +80,16 @@ Then, you can create a simple React component that serves as a client using the 
   export const { client, useClient } = createClient();
 
   // Create an example store for messages received from the server
+  let id = 0;
   export const useMessages = createStore(
     client,
     /* the initial internal state */
-    [] as { id: string, message: string }[],
+    [] as { id: number, message: string }[],
     /* a reducer handling state changes based on incoming messages */
-    (state, message) => [...state, { id: crypto.randomUUID(), message: message.type }].slice(-10),
+    (state, message) => {
+      id += 1;
+      return [...state, { id, message: message.type }].slice(-10);
+    },
     /* a mapper that can map the internal state to a different format */
     s => s
   );
@@ -136,7 +140,7 @@ Then, you can create a simple React component that serves as a client using the 
         <div>
           <h2>Status: {status}</h2>
           <button onClick={() => {
-            client.link('simon-' + crypto.randomUUID().substring(0, 4), 'no-auth')
+            client.link('simon-' + Math.random().toString(36).slice(2, 6), 'no-auth')
               .catch((e: Error) => setFailure(e.message))
           }}>
             Link!
@@ -204,4 +208,3 @@ export default function App() {
 
 ## Support for other Programming Languages
 Currently, Krmx has only been implemented in TypeScript. However, the Krmx protocol is language agnostic. If you decide to build your own Krmx compatible implementation for example using GoLang or Rust, then feel free to add that as a reference implementation to this repository by [opening a pull request](https://github.com/simonkarman/krmx).
-

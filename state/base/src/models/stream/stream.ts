@@ -1,5 +1,4 @@
 import { z, ZodAnyDef } from 'zod';
-import { createHash } from 'crypto';
 import { produce } from 'immer';
 import { EventDefinitions } from './model';
 
@@ -70,9 +69,7 @@ export class Stream<State> {
    */
   dispatch(dispatcher: string, event: { type: string, payload?: unknown }, isOptimistic = false): boolean | z.ZodError {
     const generateHashOfEvent = () => {
-      const hash = createHash('sha256');
-      hash.update(JSON.stringify({ dispatcher, event }));
-      return hash.digest('hex');
+      return `${dispatcher}|${JSON.stringify(event)}`;
     };
 
     // get the action definition corresponding to the dispatched event

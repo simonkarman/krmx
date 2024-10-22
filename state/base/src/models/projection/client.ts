@@ -3,6 +3,7 @@ import { Delta, patch } from 'jsondiffpatch';
 import { z } from 'zod';
 import { produce } from 'immer';
 import { ActionDefinitions } from './model';
+import { Random } from '../../utils';
 
 type ClientSubscription<Projection> = (projection: Projection) => void;
 
@@ -11,6 +12,8 @@ type ClientSubscription<Projection> = (projection: Projection) => void;
  *  It allows for setting the projection, applying deltas to the projection, and managing optimistic updates to the projection.
  */
 export class ProjectionClient<Projection> {
+  private random: Random;
+
   private internalProjection: Projection;
   private optimisticProjection: Projection;
   private optimisticActions: { optimisticId: string, dispatcher: string, action: Message }[] = [];
@@ -22,9 +25,10 @@ export class ProjectionClient<Projection> {
   ) {
     this.internalProjection = undefined as Projection;
     this.optimisticProjection = undefined as Projection;
+    this.random = undefined as unknown as Random;
   }
 
-  private emit() {
+  private emit(): void {
     this.subscriptions.forEach(subscription => {
       try {
         subscription(this.projection());
@@ -40,14 +44,17 @@ export class ProjectionClient<Projection> {
    *
    * @param projection The projection to set.
    */
-  set(projection: Projection) {
+  set(projection: Projection): void {
+    this.random = new Random('a' + Date.now().toString(36) + JSON.stringify(projection));
+
     this.internalProjection = projection;
     this.optimisticProjection = structuredClone(projection);
     this.optimisticActions = [];
+
     this.emit();
   }
 
-  private assertSet() {
+  private assertSet(): void {
     if (this.internalProjection === undefined) {
       throw new Error('cannot use client if no projection has been set, please invoke client.set(...) first');
     }
@@ -88,7 +95,7 @@ export class ProjectionClient<Projection> {
    * @returns Returns an object with a success prop, that is set to true or false. If true, the action should be sent to the server. If false, the
    *  error property (string or ZodError) will explain why it failed.
    */
-  optimistic(dispatcher: string, action: Message) : { success: true, optimisticId?: string }
+  optimistic(dispatcher: string, action: Message): { success: true, optimisticId?: string }
     | { success: false, error: 'action type does not exist' | z.ZodError } {
     this.assertSet();
 
@@ -128,12 +135,12 @@ export class ProjectionClient<Projection> {
     this.emit();
 
     // save (and return the id of) the optimistic action
-    const optimisticId = 'opt0-' + crypto.randomUUID();
+    const optimisticId = 'opt0-' + this.random.string(10);
     this.optimisticActions.push({ optimisticId, dispatcher, action });
     return { success: true, optimisticId };
   }
 
-  private reapplyOptimisticActions() {
+  private reapplyOptimisticActions(): void {
     this.optimisticProjection = structuredClone(this.internalProjection);
     this.optimisticActions.forEach(({ dispatcher, action }) => {
       try {
@@ -169,7 +176,7 @@ export class ProjectionClient<Projection> {
    *
    * @param optimisticId The id of the optimistic action to release.
    */
-  releaseOptimistic(optimisticId: string) {
+  releaseOptimistic(optimisticId: string): void {
     this.assertSet();
 
     this.optimisticActions = this.optimisticActions.filter(e => e.optimisticId !== optimisticId);
@@ -183,7 +190,7 @@ export class ProjectionClient<Projection> {
    *
    * @param subscription The subscription to add.
    */
-  subscribe(subscription: ClientSubscription<Projection>) {
+  subscribe(subscription: ClientSubscription<Projection>): void {
     this.subscriptions.push(subscription);
   }
 
@@ -191,7 +198,7 @@ export class ProjectionClient<Projection> {
    * Get the current projection.
    * Note: The projection will always be the optimistic projection, if there are any optimistic actions.
    */
-  projection() {
+  projection(): Projection {
     return structuredClone(this.optimisticProjection);
   }
 }
