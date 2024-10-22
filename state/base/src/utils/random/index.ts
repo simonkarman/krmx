@@ -49,17 +49,17 @@ export class Random {
     return this.next() < 0.5;
   }
 
-  public rangeInt(minInclusive: number, maxInclusive?: number | undefined): number {
-    if (maxInclusive === undefined) {
-      maxInclusive = minInclusive;
+  public rangeInt(minInclusive: number, maxExclusive?: number | undefined): number {
+    if (maxExclusive === undefined) {
+      maxExclusive = minInclusive;
       minInclusive = 0;
     }
-    if (minInclusive > maxInclusive) {
-      [minInclusive, maxInclusive] = [maxInclusive, minInclusive];
+    if (minInclusive > maxExclusive) {
+      [minInclusive, maxExclusive] = [maxExclusive, minInclusive];
     }
     minInclusive = Math.floor(minInclusive);
-    maxInclusive = Math.floor(maxInclusive) + 1;
-    return Math.floor(this.next() * (maxInclusive - minInclusive)) + minInclusive;
+    maxExclusive = Math.floor(maxExclusive);
+    return Math.floor(this.next() * (maxExclusive - minInclusive)) + minInclusive;
   }
 
   public shuffleArrayInPlace(array: unknown[]): void {
@@ -80,7 +80,7 @@ export class Random {
   public string(length: number, characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'): string {
     let result = '';
     for (let i = 0; i < length; i++) {
-      result += characters.charAt(this.rangeInt(characters.length - 1));
+      result += characters.charAt(this.rangeInt(characters.length));
     }
     return result;
   }

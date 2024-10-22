@@ -2,7 +2,7 @@
   "name": "@krmx/state",
   "description": "krmx state",
   "author": "Simon Karman",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "main": "dist/src/index.js",
   "scripts": {
     "test": "jest --coverage --silent --verbose",
@@ -18,10 +18,12 @@
     "@krmx/base": "^0.6.3",
     "immer": "^10.1.1",
     "jsondiffpatch": "0.5.0",
+    "uuid": "^10.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/jest": "^29.5.1",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "eslint": "^7.32.0",

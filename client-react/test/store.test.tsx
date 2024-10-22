@@ -17,11 +17,13 @@ describe('Store', () => {
 
       // Example of a message store that tracks the last 2 messages
       const { client, useClient } = createClient();
+      let id = 0;
       const useMessageStore = createStore(
         client,
-        [] as { id: string, content: string }[],
+        [] as { id: number, content: string }[],
         (state, message) => {
-          return [...state, { id: crypto.randomUUID(), content: message.type }].slice(-2);
+          id += 1;
+          return [...state, { id, content: message.type }].slice(-2);
         },
         s => s.map(m => ({ key: m.id, data: m.content })),
       );

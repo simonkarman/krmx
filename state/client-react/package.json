@@ -2,7 +2,7 @@
   "name": "@krmx/state-client-react",
   "description": "krmx state client for react",
   "author": "Simon Karman",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "main": "dist/src/index.js",
   "scripts": {
     "test": "jest --coverage --silent --verbose",
@@ -15,7 +15,7 @@
   "dependencies": {
     "@krmx/base": "^0.6.3",
     "@krmx/client": "^0.6.3",
-    "@krmx/state": "^0.0.2"
+    "@krmx/state": "^0.0.4"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0"

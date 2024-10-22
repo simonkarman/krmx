@@ -90,12 +90,16 @@ import { createClient, createStore } from '@krmx/client-react';
 export const { client, useClient } = createClient();
 
 // Create an example store for messages received from the server
+let id = 0;
 export const useMessages = createStore(
   client,
   /* the initial internal state */
-  [] as { id: string, message: string }[],
+  [] as { id: number, message: string }[],
   /* a reducer handling state changes based on incoming messages */
-  (state, message) => [...state, { id: crypto.randomUUID(), message: message.type }].slice(-10),
+  (state, message) => {
+    id += 1;
+    return [...state, { id, message: message.type }].slice(-10)
+  },
   /* a mapper that can map the internal state to a different format */
   s => s
 );
@@ -146,7 +150,7 @@ export function KrmxExampleClient({ serverUrl }: { serverUrl: string }) {
       <div>
         <h2>Status: {status}</h2>
         <button onClick={() => {
-          client.link('simon-' + crypto.randomUUID().substring(0, 4), 'no-auth')
+          client.link('simon-' + Math.random().toString(36).slice(2, 6), 'no-auth')
             .catch((e: Error) => setFailure(e.message))
         }}>
           Link!

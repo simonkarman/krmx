@@ -132,6 +132,7 @@ import { createClient, createStore } from '@krmx/client-react';
 export const { client, useClient } = createClient(/* props */);
 
 // Example Message Store
+let id = 0;
 export const useMessages = createStore(
   /* the client to create the store for */
   client,
@@ -140,7 +141,10 @@ export const useMessages = createStore(
   [] as { id: string, message: string }[],
 
   /* a reducer returning the new state after each incoming messages */
-  (state, message) => [...state, { id: crypto.randomUUID(), message: message.type }].slice(-10),
+  (state, message) => {
+    id += 1;
+    return [...state, { id: crypto.randomUUID(), message: message.type }].slice(-10);
+  },
 
   /* a mapper that can map the state to a different format, which is what will be available when using the hook */
   s => s

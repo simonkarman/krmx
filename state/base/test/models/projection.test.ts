@@ -65,7 +65,7 @@ describe('Projection Model', () => {
     // Define patched state
     type LotState = { r: Random, lastLotId: number, lots: { id: string, owner: string, value: number }[], cash: { [username: string]: number } };
     type LotProjection = { lots: { owner: 'you' | 'someone-else', value: number | '?' }[], cash: { [username: string]: number } };
-    const lotState = new ProjectionModel<LotState, LotProjection>(
+    const model = new ProjectionModel<LotState, LotProjection>(
       { r: new Random(Date.now().toString()), lastLotId: 34000, lots: [], cash: {} },
       (state: LotState, username) => ({
         lots: state.lots.map(lot => ({
@@ -75,13 +75,13 @@ describe('Projection Model', () => {
         cash: state.cash,
       }),
     );
-    const drawLot = lotState.when('draw', z.undefined(), (state: LotState, dispatcher: string) => {
+    const drawLot = model.when('draw', z.undefined(), (state: LotState, dispatcher: string) => {
       state.lastLotId += 1;
-      state.lots.push({ id: `l-${state.lastLotId}`, owner: dispatcher, value: state.r.rangeInt(1, 9) });
+      state.lots.push({ id: `l-${state.lastLotId}`, owner: dispatcher, value: state.r.rangeInt(1, 10) });
     }, (view: LotProjection) => {
       view.lots.push({ owner: 'you', value: '?' });
     });
-    const cashOut = lotState.when('cash-out', z.string(), (state: LotState, dispatcher: string, lotId: string) => {
+    const cashOut = model.when('cash-out', z.string(), (state: LotState, dispatcher: string, lotId: string) => {
       const lotIndex = state.lots.findIndex(lot => lot.id === lotId);
       if (lotIndex === -1) {
         throw new Error('a lot with that id does not exist');
@@ -91,15 +91,15 @@ describe('Projection Model', () => {
       state.lots = state.lots.filter(lot => lot.owner !== dispatcher || lot.id === lotId);
       state.cash[dispatcher] = (state.cash[dispatcher] || 0) + cash;
     });
-    const noop = lotState.when('noop', z.undefined(), () => { /* do nothing */ });
+    const noop = model.when('noop', z.undefined(), () => { /* do nothing */ });
 
     // Start example server
-    const server = lotState.spawnServer();
+    const server = model.spawnServer();
     server.dispatch('simon', drawLot());
     server.dispatch('lisa', drawLot());
 
     // After some initial actions, start an example client for lisa
-    const client = lotState.spawnClient();
+    const client = model.spawnClient();
     server.subscribe((getDeltaFor, optimisticId) => {
       const delta = getDeltaFor('lisa');
       if (delta === false) {
@@ -112,9 +112,9 @@ describe('Projection Model', () => {
         console.error('error applying delta', err);
       }
     });
-    let latestProjection: LotProjection = undefined as unknown as LotProjection;
+    let clientProjection: LotProjection = undefined as unknown as LotProjection;
     client.subscribe((view) => {
-      latestProjection = view; // this would update external store in react
+      clientProjection = view; // this would update external store in react
     });
     client.set(server.projection('lisa')); // this happens through Krmx
 
@@ -123,14 +123,14 @@ describe('Projection Model', () => {
     server.dispatch('simon', noop());
     const clientEvent = drawLot();
     const result = client.optimistic('lisa', clientEvent);
-    expect(latestProjection.lots.filter(l => l.owner === 'you' && l.value === '?').length).toBe(1);
+    expect(clientProjection.lots.filter(l => l.owner === 'you' && l.value === '?').length).toBe(1);
     server.dispatch('lisa', drawLot());
     server.dispatch('lisa', clientEvent, result.success ? result.optimisticId : undefined); // this happens through Krmx
     server.dispatch('lisa', noop());
     server.dispatch('simon', drawLot());
     server.dispatch('lisa', cashOut('l-34003'));
-    expect(latestProjection).toStrictEqual(server.projection('lisa'));
-    expect(latestProjection).toStrictEqual(client.projection());
+    expect(clientProjection).toStrictEqual(server.projection('lisa'));
+    expect(clientProjection).toStrictEqual(client.projection());
   });
   it('should not allow applying or optimistic when set is not called', () => {
     const state = new ProjectionModel({ value: 0 }, (state) => state);

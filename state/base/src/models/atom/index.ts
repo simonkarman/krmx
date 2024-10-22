@@ -25,7 +25,7 @@ export const parseAtom = (input: string): Atom => {
 };
 
 /**
- * A message to set an Atom .
+ * A message to set an Atom.
  */
 export type AtomSetMessage = { type: 'atom/set', payload: { key: string, atom: Atom } };
 
