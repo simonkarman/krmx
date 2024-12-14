@@ -104,6 +104,6 @@ export const registerProjection = <View>(
     /**
      * Get projection for a specific user.
      */
-    projection: instance.projection,
+    projection: (username: string) => instance.projection(username),
   };
 };

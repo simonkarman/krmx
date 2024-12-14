@@ -2,7 +2,7 @@
   "name": "@krmx/state-server",
   "description": "krmx state server",
   "author": "Simon Karman",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "main": "dist/src/index.js",
   "scripts": {
     "test": "jest --coverage --silent --verbose",
