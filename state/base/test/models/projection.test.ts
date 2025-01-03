@@ -1,4 +1,4 @@
-import { ProjectionModel, Random } from '../../src';
+import { ProjectionModel, Random, Vector2 } from '../../src';
 import { z } from 'zod';
 import { patch } from 'jsondiffpatch';
 
@@ -248,5 +248,104 @@ describe('Projection Model', () => {
   // allow a server handler to already commit any made changes during the handler, that if the handler throws an error, the those prior changes are
   //   not rolled back
   // TODO: think about how to handle informing the clients about the mistakes they made (errors thrown by the server handlers)
-  // TODO: add support for unsubscribe and use this in client and server implentations
+  // TODO: add support for unsubscribe and use this in client and server implementations
+
+  // it('should work with behaviors', () => {
+  //   const model = new ProjectionModel({ a: 0, b: 0, decayingId: undefined as (string | undefined) });
+  //   const aOrBSchema = z.union([z.literal('a'), z.literal('b')]);
+  //   const decaying = model.while('decaying', aOrBSchema, (ctx) => {
+  //     const { state, dispatcher, payload, handleAction, startBehavior, stopBehavior } = ctx;
+  //   });
+  //   const incrementSchema = z.object({ name: aOrBSchema, amount: z.number() });
+  //   const increment = model.when('increment', incrementSchema, (ctx) => {
+  //     const { state, dispatcher, payload, handleAction, startBehavior, stopBehavior } = ctx;
+  //     if (dispatcher !== 'simon') {
+  //       return;
+  //     }
+  //
+  //     state.current[payload.name] += payload.amount;
+  //     if (payload.amount == 5) {
+  //       handleAction(increment({ name: payload.name, amount: 1 }));
+  //     }
+  //     if (payload.amount == 10) {
+  //       startBehavior('decaying', 'a');
+  //     } else {
+  //       stopBehavior('decaying');
+  //     }
+  //   });
+  //   model.while('processing', function* (ctx) {
+  //     // test duration
+  //     for (let i = 0; i < 10; i++) {
+  //       yield ctx.duration(100);
+  //       ctx.state.a += 1;
+  //     }
+  //
+  //     // test after
+  //     yield ctx.after(increment, ({ payload, dispatcher }) => payload.name == 'a' && dispatcher === 'simon');
+  //     after = true;
+  //
+  //     // test when
+  //     yield ctx.when((state) => state.items.length == 0);
+  //   });
+  //
+  //   // Spawn a server
+  //   const server = model.spawnServer();
+  // });
+  it('', () => {
+    const optional = <T>(initial?: T): T | undefined => initial;
+    const arr = <T>(initial?: T[]): T[] => initial ?? [];
+
+    const NumberOfPawnsPerPlayer = 4;
+    const initialState = {
+      rng: undefined as unknown as Random,
+      tiles: arr<{
+        hasPawnOf?: { playerName: string, pawnIndex: number },
+        isStartOf?: { playerName: string },
+        isEndOf?: { playerName: string },
+        position: Vector2,
+      }>(),
+      players: {} as Record<string, {
+        name: string,
+        isActive: boolean,
+        isFinished: boolean,
+        color: string,
+        pawns: {
+          realm: 'start' | 'board' | 'end',
+          tileIndex: number,
+          position: Vector2,
+        }[],
+        startTileIndex: number,
+        startTiles: { occupied: boolean, position: Vector2 }[],
+        endTileIndex: number,
+        endTiles: { occupied: boolean, position: Vector2 }[],
+      }>,
+    };
+    type State = typeof initialState;
+    const model = new Model(initialState);
+
+    const startBehaviorSchema = z.object({
+      players: z.array(z.string().min(2)).min(2).max(6),
+      seed: z.string().min(1),
+    });
+    const startBehavior = model.addBehaviour('start', startBehaviorSchema, (ctx: {
+      state: State,
+      payload: z.infer<typeof startBehaviorSchema>,
+    }) => {
+      const { state, payload } = ctx;
+      state.rng = new Random(payload.seed);
+
+    });
+
+    // Start game!
+    const result = model.spawnServer().startBehavior(
+      startBehavior,
+      {
+        players: ['simon', 'lisa', 'marjolein', 'tim'],
+        seed: '123',
+      },
+    );
+    if (!result.ok) {
+      throw new Error('Failed to start the game');
+    }
+  });
 });

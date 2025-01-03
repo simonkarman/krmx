@@ -10,6 +10,29 @@ export type ActionDefinitions<State, Projection> = {
   }
 };
 
+type TimeYield = {
+  type: 'time',
+  ms: number,
+};
+
+type ActionYield = {
+  type: 'action',
+  action: string,
+};
+
+type ConditionYield<State> = {
+  type: 'condition',
+  condition: (state: State) => boolean,
+};
+
+export type BehaviorYield<State> = TimeYield | ActionYield | ConditionYield<State>;
+
+export type BehaviorDefinitions<State> = {
+  [name: string]: (ctx: {
+    state: State,
+  }) => Generator<BehaviorYield<State>, void>,
+};
+
 /**
  * A projection model represents a typesafe state and individual (possibly unique) projections on top of that state, including the corresponding
  *  actions that can be taken to alter the original state and trigger updates on the projections. The projections are updated through patches, which
@@ -22,8 +45,10 @@ export type ActionDefinitions<State, Projection> = {
  * complex types as part of your projection.
  */
 export class ProjectionModel<State, Projection> {
-  private actionDefinitions: ActionDefinitions<State, Projection> = {};
   private immutable = false;
+
+  private actionDefinitions: ActionDefinitions<State, Projection> = {};
+  private behaviorDefinitions: BehaviorDefinitions<State> = {};
 
   /**
    * Creates a new projection model.
@@ -34,7 +59,7 @@ export class ProjectionModel<State, Projection> {
    */
   constructor(
     public readonly initialState: State,
-    private readonly projectionMapper: (state: State, username: string) => Projection,
+    private readonly projectionMapper: (state: State, username: string) => Projection = (state) => state as unknown as Projection,
   ) {}
 
   /**
@@ -61,7 +86,7 @@ export class ProjectionModel<State, Projection> {
     PayloadSchema extends ZodUndefined
       ? () => { type: Type, payload: undefined }
       : (payload: z.infer<PayloadSchema>) => { type: Type, payload: z.infer<PayloadSchema> } {
-    // check if an action type is added after the server or client is spawned
+    // check if the action type is added after the server or client is spawned
     if (this.immutable) {
       throw new Error('cannot add new action type after spawning a server or client');
     }
@@ -76,6 +101,31 @@ export class ProjectionModel<State, Projection> {
 
     // @ts-expect-error as payload parameter could be undefined
     return (payload) => ({ type, payload });
+  }
+
+  /**
+   * Adds a new behavior to the model.
+   *
+   * @param name The unique name of the behavior. For example: 'cycling', 'fading', 'decaying', 'pulsing', 'growing', ...
+   * @param generator The generator function that describes the behavior. The generator function is invoked with a context object which allows it to
+   *   alter the current state. The generator function can yield values that indicate the progress of the behavior, such as 'waiting some time',
+   *   'waiting for a specific action', or 'waiting for a specific condition'.
+   */
+  while(
+    name: string,
+    generator: BehaviorDefinitions<State>[string],
+  ): void {
+    // check if the behavior is added after the server or client is spawned
+    if (this.immutable) {
+      throw new Error('cannot add new behavior after spawning a server or client');
+    }
+
+    // check if the name is already in use
+    if (this.behaviorDefinitions[name] !== undefined) {
+      throw new Error(`behavior name ${name} is already in use`);
+    }
+
+    this.behaviorDefinitions[name] = generator;
   }
 
   /**

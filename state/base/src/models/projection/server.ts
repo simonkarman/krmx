@@ -7,7 +7,7 @@ import { ActionDefinitions } from './model';
 type ServerSubscription = (getDeltaFor: (username: string) => Delta | false, optimisticId: string | undefined) => void;
 
 /**
- * A projection client is the client-side representation of the projection model. It is used to manage the state on the server side and allows for
+ * A projection server is the server-side representation of the projection model. It is used to manage the state on the server side and allows for
  *  dispatching of actions to alter the state and notify all subscribers of the changes to the state in the for of projection deltas.
  */
 export class ProjectionServer<State, Projection> {
