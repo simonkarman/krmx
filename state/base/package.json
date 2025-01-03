@@ -33,7 +33,7 @@
     "ts-jest": "^29.1.0",
     "typescript": "^5.0.2"
   },
-  "license": "ISC",
+  "license": "LGPL-3.0-or-later",
   "homepage": "https://simonkarman.github.io/krmx",
   "contributors": [
     {

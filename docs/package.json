@@ -25,7 +25,7 @@
     "tailwindcss": "^3.3.3",
     "typedoc": "^0.25.9"
   },
-  "license": "ISC",
+  "license": "LGPL-3.0-or-later",
   "homepage": "https://simonkarman.github.io/krmx",
   "contributors": [
     {

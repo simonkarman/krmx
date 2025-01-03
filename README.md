@@ -23,3 +23,7 @@ If you find any issues when using Krmx, then please create a ticket here: [krmx/
 
 ### Contributors
 - [Simon Karman](https://www.simonkarman.nl) - *creator of Krmx*
+
+## License
+
+This project is licensed under the GNU Lesser General Public License v3.0 or later - see the [LICENSE](LICENSE) file for details
