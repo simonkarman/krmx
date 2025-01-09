@@ -81,4 +81,7 @@ jobs:
 
             # Publish the package
             npm publish --provenance --access public
+          
+            # Create a new tag for the published version of the package
+            git tag -a "${{ matrix.package }}@v$LOCAL_VERSION" -m "${{ matrix.package }}@v$LOCAL_VERSION"
           fi 
