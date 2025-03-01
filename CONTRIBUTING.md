@@ -10,7 +10,7 @@ Thank you for your interest in contributing to our project! This document provid
 4. Run `npm install` to install dependencies
 5. Make your changes
 6. Test your changes thoroughly (run `npm run validate`)
-7. Write documentation for you changes
+7. Write documentation for your changes
 8. Push your branch to your fork: `git push origin feature/your-feature-name`
 9. Create a pull request to the main repository
 10. Wait for your PR to be reviewed by maintainers

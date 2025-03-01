@@ -19,8 +19,7 @@ You can find the different components in these directories:
 The base, server, client, client-react, and state implementations are published on npm under the [krmx](https://www.npmjs.com/org/krmx) npmjs organisation.
 
 ## Contributing
-If you want to help improve Krmx or add new features., then please read the [Contributing Guidelines](./CONTRIBUTING.md) before submitting pull requests or reporting issues.
-
+If you want to help improve Krmx or add new features, then please read the [Contributing Guidelines](./CONTRIBUTING.md) before submitting pull requests or reporting issues.
 By contributing to this project, you agree to abide by the [Code of Conduct](./CODE_OF_CONDUCT.md) and [license](./LICENSE) terms.
 
 > Possible upcoming features and ideas can be found in [features.md](./features.md).
