@@ -17,7 +17,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     strategy:
       max-parallel: 1 # has to be 1 (one) as there are dependencies between the published packages
@@ -33,6 +33,7 @@ jobs:
       - name: Publish Packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd ${{ matrix.package }}
           echo "-- @krmx/${{ matrix.package }} --"
@@ -84,4 +85,5 @@ jobs:
           
             # Create a new tag for the published version of the package
             git tag -a "${{ matrix.package }}@v$LOCAL_VERSION" -m "${{ matrix.package }}@v$LOCAL_VERSION"
+            git push origin "${{ matrix.package }}@v$LOCAL_VERSION"
           fi 
