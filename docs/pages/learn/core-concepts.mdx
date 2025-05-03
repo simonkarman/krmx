@@ -1,0 +1,101 @@
+# Core Concepts
+
+## Client-Server Architecture
+Krmx is built on a client-server architecture that enables realtime multi-user interactions over WebSockets:
+
+- **Server**: The central component that manages connections, users, and message distribution. A Krmx application always has a single server that all clients connect to.
+- **Clients**: The applications that connect to the server. These could be web browsers, mobile apps, or other NodeJS applications. Multiple clients can connect to the server simultaneously.
+
+This architecture provides several benefits:
+
+1. **Centralized State Management**: The server acts as the single source of truth, ensuring all clients have consistent information.
+2. **Simplified Communication**: Clients only need to communicate with the server, not directly with each other, simplifying the network topology.
+3. **Controlled Message Distribution**: The server can determine which messages go to which clients, allowing for both broadcast and targeted communication.
+
+## Connections vs. Users
+In the Krmx protocol, there's an important distinction between connections and users:
+
+- A **connection** is the actual WebSocket connection established between a client application and the Krmx server. This is the technical communication channel.
+- A **user** is an entity on the server that a connection can link to. It represents the logical participant in the multi-user interaction.
+
+> When you're developing an application using Krmx, you can focus solely on the user identity and the interactions, while Krmx handles the underlying connection management.
+
+## The Linking Process
+Linking is the process of associating a connection with a specific user identity on the server. Here's how it works:
+1. First, a client establishes a connection to the Krmx server using WebSockets.
+2. After the connection is established, the client can "link" this connection to a user by providing a username or identifier.
+3. Once linked, the connection now represents that specific user within the system, and the client will receive realtime information about all users on the server.
+4. The linked connection can now send custom messages to the server which are associated with that user identity.
+
+In code, this typically looks like:
+
+```javascript
+// First establish the connection
+await client.connect('ws://localhost:12345');
+
+// Then link the connection to a user identity
+await client.link('username');
+```
+
+## The Unlinking Process
+Unlinking is the opposite process - it disassociates a connection from a user identity:
+
+1. When a connection is unlinked, it no longer represents that user in the system.
+2. The connection may still exist (the WebSocket is still open), but it's not associated with any user.
+3. An unlinked connection typically can't participate in the multi-user interactions until it links to a user again.
+
+In code, unlinking can be performed like this:
+
+```javascript
+// Unlink the current connection from its user identity
+await client.unlink();
+```
+
+## Connection Lifecycle
+Understanding the full lifecycle of connections and users is important:
+1. **Connection Establishment**: When a client connects to the server, a WebSocket connection is created.
+2. **User Linking**: The client can link its connection to a user identity.
+3. **Interaction Phase**: While linked, the connection receives user events and can send/receive messages.
+4. **User Unlinking**: The client may unlink from its user identity (optional).
+5. **Connection Termination**: Eventually, the WebSocket connection is closed, either deliberately or due to network issues.
+
+## Message Flow
+Krmx handles two primary types of message flows:
+
+1. **Client to Server Messages**:
+   - When a client sends a custom message, it's transmitted over the WebSocket connection.
+   - The server receives the message and can process it based on the message type and payload.
+   - If the connection is linked to a user, the server knows which user sent the message.
+   - If the connection is not linked to a user, the server rejects the message.
+
+2. **Server to Client Messages**:
+   - The server can send messages to specific clients.
+   - The server can broadcast messages to all connected clients.
+   - The server determines message routing based on its internal logic.
+
+## Why This Separation Matters
+
+This separation between connections and users provides several benefits:
+
+1. **Connection Resilience**: If a client loses its connection (e.g., due to network issues), it can establish a new connection and re-link to the same user, effectively resuming where it left off. This can be from the same or a different device.
+  > Keep in mind that a user can only have a single connection active at a time.
+2. **User Management**: The server tracks which users are currently 'online' based on which user identities have linked connections. This user information is shared and updated in real time to all users as part of the Krmx protocol.
+3. **Authentication Flexibility**: The linking process can incorporate authentication steps to verify a user's identity before allowing the link to be established.
+4. **Dynamic Participation**: Users can join and leave the interactive session without affecting other users' experiences, creating a dynamic multi-user environment.
+
+## Server-Side User Management
+The Krmx server handles several important user-related functions:
+1. **User Registration**: When a connection links to a user identity, the server registers this user as active.
+2. **User Tracking**: The server maintains a list of all active users.
+3. **User Broadcasting**: The server notifies all linked connections when users join or leave or links or unlinks from a connection.
+4. **User Validation**: The server can implement custom validation logic to control which user identities are allowed to link.
+5. **One Connection Per User**: The server ensures that each user identity can only be linked to one connection at a time, preventing conflicts.
+
+## Client-Side Considerations
+When developing Krmx clients, consider these aspects:
+1. **Connection State Management**: Clients should track their connection state and handle reconnection if needed.
+2. **User Identity Persistence**: Clients may need to store user identities locally to facilitate reconnection.
+3. **Message Handling**: Clients need to implement handlers for different message types from the server.
+4. **UI Integration**: In UI applications, client-side code needs to update the user interface in response to server messages.
+
+This architecture creates a clean separation between the technical communication layer (connections) and the application's logical representation of participants (users), making the system more flexible and robust for real-time multi-user applications.

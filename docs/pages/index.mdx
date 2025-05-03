@@ -14,6 +14,8 @@ Krmx is a **multi-user** protocol. An application using Krmx always consists of 
 
 Krmx lets you build **interactions**. As the application designer you extend the Krmx protocol with custom messages that are sent between server and client over the connections. These custom messages define the interactions your users have with the server (and each-other).
 
+> You can find more information about the core concepts and design behind the Krmx protocol in the [Core Concepts](/learn/core-concepts) section.
+
 ---
 
 import { Card, Cards } from 'nextra/components';
@@ -107,7 +109,7 @@ export function FAQBox({ title, children }) {
 | server      | an application running a krmx server                                                  |
 | client      | an application (f.e. React App) that connects to a krmx server                        |
 | connection  | a websocket connection between a server and a client                                  |
-| user        | an client controlled entity on the server that a connection can link to               |
+| user        | an client controlled entity on the server that a single connection can link to        |
 | (un)linking | the act of linking or unlinking a connection to or from a user                        |
 | application | the complete system formed by a server and clients to serve interactive functionality |
 
