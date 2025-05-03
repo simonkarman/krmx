@@ -1,6 +1,7 @@
 {
   "index": "Introduction",
-  "core-concept": "Core Concept",
+  "core-concepts": "Core Concepts",
+  "metaphor": "Metaphor",
   "structure": "Structure",
   "event-based": "Event Based",
   "protocol": "Protocol",
