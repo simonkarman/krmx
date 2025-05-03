@@ -2,7 +2,7 @@
   "name": "@krmx/client-react",
   "description": "krmx client for react",
   "author": "Simon Karman",
-  "version": "0.6.3",
+  "version": "0.6.5",
   "main": "dist/src/index.js",
   "scripts": {
     "test": "jest --coverage --silent --verbose",
@@ -18,7 +18,7 @@
     "@krmx/client": "file:../client"
   },
   "peerDependencies": {
-    "react": "^17.0.0 || ^18.0.0"
+    "react": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.22.5",

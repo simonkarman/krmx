@@ -7,17 +7,19 @@ In Krmx there are three main components: The **client side** (purple), the **ser
 
 Krmx is designed for *multi*-user experiences. Consequently, a server will in general have many clients with their own websocket connection connected simultaneously.
 
-The **server side** is responsible for tracking all connections to the server and to which users these connections are linked. In most situation the server side also keeps track of a shared state of the application, allowing users to modify this state by sending messages which are handled by application-specific logic that alter the state.
+The **server side** is responsible for tracking all connections to the server and to which users these connections are linked. In most situation the server side also keeps track of a shared state of the application, allowing users to modify this state by sending messages which are handled by application-specific logic (that you write!) that alters the state.
 
-The **client side** is responsible for presenting the (partial) state to the user and allowing the user to interact with the client. When a client connects to the server it first has to link its connection to a user. To do this, it has to authenticate. If authentication succeeds, the server will link the connection the the corresponding user. A connection can only be linked to a single user at a time.
+The **client side** is responsible for presenting (part of) the state to the user and allowing the user to interact with the client. When a client connects to the server it first has to link its connection to a user. To do this, it has to authenticate. If authentication succeeds, the server will link the connection the the corresponding user. A connection can only be linked to a single user at a time.
 
 Once linked, a client can send message to and receive messages from the server. **Websocket connections** are used for the bi-directional communication between the client and server side.
 
 Krmx decouples individual websocket connections from the users. This ensures that user sessions are persisted across potentially many connections. If a connection drops, the user is unlinked from a connection and is required to link again using a new connection.
 
-> Example: Imagine that a client sets up websocket connection 'abc' to the server and authenticates to link to user Simon. Then, connection 'abc' drops. This results in an unlinked user Simon, as it no longer has an active connection. Next, the client sets up a new connection 'def'. Connection 'def' also authenticates as user Simon and can seamlessly continue where connection 'abc' left off.
+> Example: Imagine that a client sets up websocket connection 'abc' to the server and authenticates to link to user Simon. Then, connection 'abc' drops. This results in an unlinked user Simon, as it no longer has an active connection. Next, the client sets up a new connection 'def'. Connection 'def' also authenticates as user Simon and can seamlessly continue where connection 'abc' left off. Connection 'abc' and 'def' could have come from the save device, or from different devices.
 
 Keep in mind that even though a connection can only be linked to a single user at a time, the connection can be reused to link to another user after it unlinked.
+
+In the other way around a user can also only be linked to a single connection at a time. This means that if a user is linked to connection 'abc' and the client tries to link the same user to connection 'def', the server will either unlink the user from connection 'abc' and link it to connection 'def', or reject connection 'def' to link to the user.
 
 In Krmx all clients will receive updates about the users that have authenticated to the server and for each user whether it is currently linked or unlinked.
 
@@ -30,6 +32,6 @@ The Krmx API on server and client side abstract away this complexity and allows 
 | server      | an application running a krmx server                                                  |
 | client      | an application (f.e. React App) that connects to a krmx server                        |
 | connection  | a websocket connection between a server and a client                                  |
-| user        | an client controlled entity on the server that a connection can link to               |
+| user        | an client controlled entity on the server that a single connection can link to        |
 | (un)linking | the act of linking or unlinking a connection to or from a user                        |
 | application | the complete system formed by a server and clients to serve interactive functionality |
