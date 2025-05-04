@@ -14,4 +14,4 @@ To see what Krmx currently has to offer read the [Krmx documentation](https://si
 2. Class Serialization - Allow serialization of data that contains classes with custom toJson and fromJson implementations
 
 ### Krmx Starter
-1. Npx Command - Publish a `npx create krmx-app` command that bootstraps a new Krmx application with a basic setup including Krmx State.
+1. Npx Command - Publish a `npx create krmx-app` command that bootstraps a new Krmx application with a basic setup including Krmx State. See [Krmx Starter](https://github.com/simonkarman/krmx-starter) for the starter application.

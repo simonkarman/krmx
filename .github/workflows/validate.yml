@@ -19,3 +19,34 @@ jobs:
           node-version: '22.x'
       - name: Validate Packages
         run: npm run validate
+
+      # Test tag creation and push
+      - name: Test Tag Push
+        run: |
+          # Set Git identity for the tag
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          # Create a test tag with timestamp to ensure uniqueness
+          TIMESTAMP=$(date +%s)
+          TEST_TAG="test-tag-${TIMESTAMP}"
+
+          echo "Creating test tag: ${TEST_TAG}"
+          git tag -a "${TEST_TAG}" -m "Test tag ${TEST_TAG}"
+
+          # Push the tag using explicit credentials
+          echo "Pushing test tag to origin..."
+          git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git "${TEST_TAG}"
+
+          # Verify tag was pushed successfully
+          echo "Tag pushed successfully!"
+          sleep 15 # Wait for a few seconds to ensure the tag is available
+
+          # Delete the tag both locally and remotely
+          echo "Deleting test tag..."
+          git tag -d "${TEST_TAG}"
+          git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git :refs/tags/${TEST_TAG}
+
+          echo "Tag test completed successfully!"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
