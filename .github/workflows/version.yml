@@ -12,4 +12,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check versions
-        run: ../.github/tools/version-check.sh
+        run: .github/tools/version-check.sh
