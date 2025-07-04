@@ -52,7 +52,7 @@ jobs:
             npm cache clean --force
 
             # Install the package dependencies
-            npm install
+            npm ci
 
             # Check if there are local dependencies in the package.json
             if jq -e '.dependencies | to_entries[] | select(.value | startswith("file:")) | length > 0' package.json &> /dev/null; then
