@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "postinstall": "npm --prefix base install && npm --prefix server install && npm --prefix client install && npm --prefix client-react install && npm --prefix state install && npm --prefix docs install",
-    "audit:fix": "npm --prefix base audit fix && npm --prefix server audit fix && npm --prefix client audit fix && npm --prefix client-react audit fix && npm --prefix state run audit:fix && npm --prefix docs audit fix",
+    "audit:fix": "npm --prefix base audit fix && npm --prefix server audit fix && npm --prefix client audit fix && npm --prefix client-react audit fix && npm --prefix state run audit:fix && npm --prefix docs audit fix && npm run patch",
     "validate": "npm install && .github/tools/version-check.sh && npm run --prefix base validate && npm run --prefix server validate && npm run --prefix client validate && npm run --prefix client-react validate && npm run --prefix state validate && npm run --prefix docs validate",
     "dev": "npm-run-all --parallel dev:*",
     "dev:base": "npm run --prefix base dev",
