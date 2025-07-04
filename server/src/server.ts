@@ -1,10 +1,22 @@
 import http from 'http';
 import { randomBytes } from 'node:crypto';
-import ws, { AddressInfo, RawData, WebSocket, WebSocketServer } from 'ws';
+import { AddressInfo, RawData, WebSocket, WebSocketServer } from 'ws';
 import {
-  EventGenerator, EventEmitter, Logger, LogSeverity, FromServerMessage, FromClientMessage,
-  JoinedMessage, LinkedMessage, UnlinkedMessage, LeftMessage, RejectedMessage, AcceptedMessage,
-  Message, User, LinkMessage,
+  AcceptedMessage,
+  EventEmitter,
+  EventGenerator,
+  FromClientMessage,
+  FromServerMessage,
+  JoinedMessage,
+  LeftMessage,
+  LinkedMessage,
+  LinkMessage,
+  Logger,
+  LogSeverity,
+  Message,
+  RejectedMessage,
+  UnlinkedMessage,
+  User,
 } from '@krmx/base';
 import { ExpectedQueryParams, hasExpectedQueryParams } from './utils';
 import { VERSION } from './version';
@@ -256,7 +268,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
   private readonly pingIntervalMilliseconds: number;
 
   private pingInterval: ReturnType<typeof setInterval> | undefined;
-  private readonly connections: { [connectionId: string]: { socket: ws.WebSocket, isAlive: boolean, username?: string } } = {};
+  private readonly connections: { [connectionId: string]: { socket: WebSocket, isAlive: boolean, username?: string } } = {};
   private readonly users: { [username: string]: { connectionId?: string } } = {};
   private status: Status;
   private canOnly(action: string, when: Status[] | Status): void {
@@ -326,7 +338,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
         for (const connectionId in this.connections) {
           const connection = this.connections[connectionId];
           if (connection.isAlive) {
-            if (connection.socket.readyState === ws.WebSocket.OPEN) {
+            if (connection.socket.readyState === WebSocket.OPEN) {
               connection.socket.ping(connectionId);
             }
             connection.isAlive = false;
@@ -555,7 +567,7 @@ class ServerImpl extends EventGenerator<Events> implements Server {
     if (connection === undefined) {
       throw new Error(`cannot send ${message.type} message to connection ${connectionId}, as that connection does not exist`);
     }
-    if (connection.socket.readyState === ws.WebSocket.OPEN) {
+    if (connection.socket.readyState === WebSocket.OPEN) {
       const data = JSON.stringify(message);
       connection.socket.send(data);
     } else {
