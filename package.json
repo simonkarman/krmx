@@ -15,7 +15,7 @@
     "dev:client-react": "sleep 750 && npm run --prefix client-react dev",
     "dev:docs": "npm run --prefix docs dev",
     "versions": ".github/tools/version-check.sh && npm install && npm --prefix base run postversion && npm --prefix server run postversion && npm --prefix client run postversion && npm --prefix client-react run postversion && npm --prefix state run versions",
-    "patch": "npm --prefix base version patch && npm --prefix server version patch && npm --prefix client version patch && npm --prefix client-react version patch && .github/tools/version-check.sh"
+    "patch-all": "npm --prefix base version patch && npm --prefix server version patch && npm --prefix client version patch && npm --prefix client-react version patch && .github/tools/version-check.sh"
   },
   "dependencies": {
     "npm-run-all": "^4.1.5",
