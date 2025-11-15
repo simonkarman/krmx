@@ -15,7 +15,7 @@
     "prepublishOnly": "npm install && npm run validate"
   },
   "dependencies": {
-    "@krmx/base": "file:../base",
+    "@krmx/base": "*",
     "ws": "^8.13.0"
   },
   "devDependencies": {
