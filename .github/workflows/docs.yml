@@ -39,12 +39,12 @@ jobs:
       - name: Build with Next
         run: |
           npm run validate
-          cd docs
+          cd packages/docs
           npm run build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './docs/out'
+          path: './packages/docs/out'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

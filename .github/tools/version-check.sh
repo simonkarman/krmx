@@ -2,7 +2,7 @@ echo "Verifying that all packages have the same major and minor version (patch v
 version_base=$(cat package.json | jq '.version' --raw-output)
 echo "Base Version: $version_base"
 
-find . -name "package.json" -type f -not -path "./package.json" -not -path "*/node_modules/*" -not -path "*/.next/*" -not -path "*/state/*" | sort | while read -r file; do
+find packages -name "package.json" -type f -not -path "*/node_modules/*" -not -path "*/.next/*" -not -path "packages/state/*" | sort | while read -r file; do
   name_pkg=$(cat $file | jq '.name' --raw-output)
   version_pkg_original=$(cat $file | jq '.version' --raw-output)
   version_pkg="${version_pkg_original%.*}"

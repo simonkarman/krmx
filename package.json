@@ -5,17 +5,17 @@
   "version": "0.6",
   "private": true,
   "scripts": {
-    "postinstall": "npm --prefix base install && npm --prefix server install && npm --prefix client install && npm --prefix client-react install && npm --prefix state install && npm --prefix docs install",
-    "audit:fix": "npm --prefix base audit fix && npm --prefix server audit fix && npm --prefix client audit fix && npm --prefix client-react audit fix && npm --prefix state run audit:fix && npm --prefix docs audit fix && npm run patch",
-    "validate": "npm install && .github/tools/version-check.sh && npm run --prefix base validate && npm run --prefix server validate && npm run --prefix client validate && npm run --prefix client-react validate && npm run --prefix state validate && npm run --prefix docs validate",
+    "postinstall": "npm --prefix packages/base install && npm --prefix packages/server install && npm --prefix packages/client install && npm --prefix packages/client-react install && npm --prefix packages/state install && npm --prefix packages/docs install",
+    "audit:fix": "npm --prefix packages/base audit fix && npm --prefix packages/server audit fix && npm --prefix packages/client audit fix && npm --prefix packages/client-react audit fix && npm --prefix packages/state run audit:fix && npm --prefix packages/docs audit fix && npm run patch",
+    "validate": "npm install && .github/tools/version-check.sh && npm run --prefix packages/base validate && npm run --prefix packages/server validate && npm run --prefix packages/client validate && npm run --prefix packages/client-react validate && npm run --prefix packages/state validate && npm run --prefix packages/docs validate",
     "dev": "npm-run-all --parallel dev:*",
-    "dev:base": "npm run --prefix base dev",
-    "dev:server": "sleep 250 && npm run --prefix server dev",
-    "dev:client": "sleep 500 && npm run --prefix client dev",
-    "dev:client-react": "sleep 750 && npm run --prefix client-react dev",
-    "dev:docs": "npm run --prefix docs dev",
-    "versions": ".github/tools/version-check.sh && npm install && npm --prefix base run postversion && npm --prefix server run postversion && npm --prefix client run postversion && npm --prefix client-react run postversion && npm --prefix state run versions",
-    "patch-all": "npm --prefix base version patch && npm --prefix server version patch && npm --prefix client version patch && npm --prefix client-react version patch && .github/tools/version-check.sh"
+    "dev:base": "npm run --prefix packages/base dev",
+    "dev:server": "sleep 250 && npm run --prefix packages/server dev",
+    "dev:client": "sleep 500 && npm run --prefix packages/client dev",
+    "dev:client-react": "sleep 750 && npm run --prefix packages/client-react dev",
+    "dev:docs": "npm run --prefix packages/docs dev",
+    "versions": ".github/tools/version-check.sh && npm install && npm --prefix packages/base run postversion && npm --prefix packages/server run postversion && npm --prefix packages/client run postversion && npm --prefix packages/client-react run postversion && npm --prefix packages/state run versions",
+    "patch-all": "npm --prefix packages/base version patch && npm --prefix packages/server version patch && npm --prefix packages/client version patch && npm --prefix packages/client-react version patch && .github/tools/version-check.sh"
   },
   "dependencies": {
     "npm-run-all": "^4.1.5",
