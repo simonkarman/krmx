@@ -420,9 +420,11 @@ class ServerImpl extends EventGenerator<Events> implements Server {
   }
   private async onUnlinkedConnectionMessage(connectionId: string, message: FromClientMessage | Message): Promise<void> {
     let rejected = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     let timeoutResolver = () => { /*none*/ };
     const reject = (reason: string) => {
       if (rejected) { return; }
+      if (timeoutId !== undefined) { clearTimeout(timeoutId); }
       timeoutResolver();
       this.logger('debug', `connection ${connectionId} rejected, due to: ${reason}`);
       const userRejectedMessage: RejectedMessage = { type: 'krmx/rejected', payload: { reason } };
@@ -483,18 +485,19 @@ class ServerImpl extends EventGenerator<Events> implements Server {
           await Promise.race([
             new Promise<void>((resolve) => {
               timeoutResolver = resolve; // allows to resolve the promise immediately on rejection
-              setTimeout(() => {
+              timeoutId = setTimeout(() => {
                 reject('authentication timeout');
                 resolve();
               }, this.authTimeoutMilliseconds);
             }),
-            await Promise.all(promises),
+            Promise.all(promises).then(() => { /* resolve race when all handlers complete */ }),
           ]);
         }
       } catch (err: unknown) {
         rejectFromError(err);
       }
     }
+    if (timeoutId !== undefined) { clearTimeout(timeoutId); }
     if (rejected) {
       return;
     }
