@@ -674,4 +674,19 @@ describe('Krmx Server', () => {
     expect(Date.now() - time).toBeLessThan(100); // should be rejected immediately
     await expect(addUser('rens')).rejects.toBe('immediately rejected by throw');
   }));
+
+  it('should not send a spurious rejection to a successfully authenticated async user after the timeout expires',
+    withCustomServer({ authTimeoutMilliseconds: 200 }, async ({ server, addUser }) => {
+      server.on('authenticate', (_username, _info, _reject, markAsync) => markAsync(async () => {
+        await sleep(100); // completes well before the 200ms timeout
+      }));
+      const simon = await addUser('simon');
+      // Wait longer than the authTimeoutMilliseconds to ensure no spurious rejection fires
+      await sleep(400);
+      // The user should NOT have received a krmx/rejected message after being accepted
+      const messages = simon.emit.message.mock.calls.map((call) => (call[0] as { type: string }).type);
+      expect(messages).not.toContain('krmx/rejected');
+      expect(messages).toContain('krmx/accepted');
+    }),
+  );
 });
